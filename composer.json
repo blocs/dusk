@@ -1,0 +1,38 @@
+{
+    "name": "blocs\/dusk",
+    "type": "library",
+    "description": "Laravel dusk browser test support package",
+    "keywords": [
+        "PHP",
+        "Laravel",
+        "Dusk",
+        "Open AI",
+        "GPT-4o",
+        "BLOCS",
+        "Package"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "LINEAR JAPAN Co.,Ltd.",
+            "email": "admin@linear-jp.biz",
+            "role": "Lead Developer"
+        }
+    ],
+    "require": {
+        "laravel\/dusk": "*",
+        "openai-php\/laravel": "*"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Blocs\\DuskServiceProvider"
+            ]
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Blocs\\": "src\/",
+        }
+    }
+}
