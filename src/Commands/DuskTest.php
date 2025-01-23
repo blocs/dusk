@@ -4,10 +4,10 @@ namespace Blocs\Commands;
 
 use Illuminate\Console\Command;
 
-class Build extends Command
+class DuskTest extends Command
 {
     protected $signature = 'blocs:dusk {path}';
-    protected $description = 'Build laravel dusk browser tests';
+    protected $description = 'Develop laravel dusk browser tests';
 
     public function handle()
     {
