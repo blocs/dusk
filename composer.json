@@ -19,7 +19,7 @@
             "role": "Lead Developer"
         }
     ],
-    "require-dev": {
+    "require": {
         "openai-php\/laravel": "*",
         "laravel\/dusk": "*"
     },
