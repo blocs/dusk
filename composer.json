@@ -19,9 +19,9 @@
             "role": "Lead Developer"
         }
     ],
-    "require": {
-        "laravel\/dusk": "*",
-        "openai-php\/laravel": "*"
+    "require-dev": {
+        "openai-php\/laravel": "*",
+        "laravel\/dusk": "*"
     },
     "extra": {
         "laravel": {
@@ -32,7 +32,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Blocs\\": "src\/",
+            "Blocs\\": "src\/"
         }
     }
 }
