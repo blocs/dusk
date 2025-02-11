@@ -269,15 +269,16 @@ class Dusk extends Command
 
         // Install laravel/dusk
         if (!file_exists(base_path('tests/DuskTestCase.php'))) {
-            $this->info('Installing laravel/dusk');
-            \Artisan::call('dusk:install');
+            $this->info('Please execute below command to install laravel/dusk');
+            $this->line('php artisan dusk:install');
+            exit;
         }
 
         // Install openai-php/laravel
         if (!file_exists(config_path('openai.php'))) {
-            $this->info('Installing openai-php/laravel');
-            $this->line('Press enter');
-            \Artisan::call('openai:install');
+            $this->info('Please execute below command to install openai-php/laravel');
+            $this->line('php artisan openai:install');
+            exit;
         }
     }
 }
