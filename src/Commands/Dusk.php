@@ -101,7 +101,7 @@ class Dusk extends Command
             foreach ($funstionContents as $funstionContent) {
                 if (preg_match('/^\s*\/\/\s*/', $funstionContent)) {
                     $comments[] = [
-                        'comment' => $funstionContent,
+                        'comment' => $funstionContent."\n",
                         'script' => '',
                     ];
                     continue;
@@ -187,9 +187,10 @@ class Dusk extends Command
 
                 $updatedScript = '';
                 foreach ($comments as $comment) {
-                    empty($comment['comment']) || $updatedScript .= $comment['comment']."\n";
+                    empty($comment['comment']) || $updatedScript .= $comment['comment'];
                     empty($comment['script']) || $updatedScript .= $comment['script'];
                 }
+                $updatedScript = preg_replace('/\n{2,}/', "\n", $updatedScript);
 
                 $originalScript = $beforeFunction.$beforeComment.$updatedScript.$afterComment.$afterFunction;
                 file_put_contents($script, $originalScript);
