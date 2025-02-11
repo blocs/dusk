@@ -190,7 +190,7 @@ class Dusk extends Command
                     empty($comment['comment']) || $updatedScript .= $comment['comment'];
                     empty($comment['script']) || $updatedScript .= $comment['script'];
                 }
-                $updatedScript = preg_replace('/\n{2,}/', "\n", $updatedScript);
+                $updatedScript = preg_replace('/\n{2,}$/', "\n", $updatedScript);
 
                 $originalScript = $beforeFunction.$beforeComment.$updatedScript.$afterComment.$afterFunction;
                 file_put_contents($script, $originalScript);
