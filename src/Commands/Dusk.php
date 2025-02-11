@@ -40,21 +40,19 @@ class Dusk extends Command
             preg_match_all('/\s*function\s*(.*?)\(/', $originalScript, $functions);
 
             // Choose action
-            $actions = [];
+            $actions = ['run'];
             foreach ($functions[1] as $function) {
                 // Add test functions
                 if (0 === strpos($function, 'test')) {
                     $actions[] = $function.' update';
-                    $actions[] = $function.' run';
                 }
             }
             $actions[] = 'exit';
             $action = $this->anticipate('Action', $actions);
 
             // run
-            if (' run' === substr($action, -4)) {
-                $function = substr($action, 0, -4);
-                \Artisan::call('dusk --browse '.$script.' --filter '.$function);
+            if ('run' === strtolower($action)) {
+                \Artisan::call('dusk --browse '.$script);
                 continue;
             }
 
