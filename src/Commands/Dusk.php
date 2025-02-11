@@ -271,7 +271,7 @@ class Dusk extends Command
         }
 
         // Install openai-php/laravel
-        if (!file_exists(config_path('openai.pfp'))) {
+        if (!file_exists(config_path('openai.php'))) {
             $this->info('Install openai-php/laravel');
             \Artisan::call('openai:install');
         }

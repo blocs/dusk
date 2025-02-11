@@ -21,5 +21,7 @@ class DuskServiceProvider extends ViewServiceProvider
 
         // appをpublish
         $publishList[__DIR__.'/../tests/Browser/blocs'] = base_path('tests/Browser/blocs');
+
+        $this->publishes($publishList);
     }
 }
