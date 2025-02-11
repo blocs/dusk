@@ -264,6 +264,9 @@ class Dusk extends Command
 
     private function install()
     {
+        // Publish
+        file_exists(base_path('tests/Browser/blocs')) || \Artisan::call('vendor:publish', ['--provider' => 'Blocs\DuskServiceProvider']);
+
         // Install laravel/dusk
         if (!file_exists(base_path('tests/DuskTestCase.php'))) {
             $this->info('Install laravel/dusk');
@@ -274,9 +277,7 @@ class Dusk extends Command
         if (!file_exists(config_path('openai.php'))) {
             $this->info('Install openai-php/laravel');
             \Artisan::call('openai:install');
+            $this->info('Press enter');
         }
-
-        // Publish
-        file_exists(base_path('tests/Browser/blocs')) || \Artisan::call('vendor:publish', ['--provider' => 'Blocs\DuskServiceProvider']);
     }
 }
