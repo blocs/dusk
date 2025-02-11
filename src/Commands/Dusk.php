@@ -18,6 +18,8 @@ class Dusk extends Command
 
     public function handle()
     {
+        $this->install();
+
         $script = $this->argument('script');
         file_exists($script) || $script = base_path($script);
         if (!file_exists($script)) {
@@ -254,5 +256,17 @@ class Dusk extends Command
         }
 
         return [$beforeFunction, $functionContent, $afterFunction];
+    }
+
+    private function install()
+    {
+        // Install laravel/dusk
+        file_exist(base_path('tests/DuskTestCase.php')) || \Artisan::call('dusk:install');
+
+        // Install openai-php/laravel
+        file_exist(config_path('openai.pfp')) || \Artisan::call('openai:install');
+
+        // Publish
+        file_exist(base_path('tests/Browser/blocs')) || \Artisan::call('vendor:publish', ['--provider' => 'Blocs\DuskServiceProvider']);
     }
 }
