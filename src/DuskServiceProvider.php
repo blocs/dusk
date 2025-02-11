@@ -13,15 +13,10 @@ class DuskServiceProvider extends ViewServiceProvider
         });
 
         $this->commands('command.blocs.dusk');
-    }
 
-    public function registerPublish()
-    {
-        $publishList = [];
-
-        // appをpublish
-        $publishList[__DIR__.'/../tests/Browser/blocs'] = base_path('tests/Browser/blocs');
-
-        $this->publishes($publishList);
+        // Publish
+        $this->publishes([
+            __DIR__.'/../tests/Browser/blocs' => base_path('tests/Browser/blocs'),
+        ]);
     }
 }
