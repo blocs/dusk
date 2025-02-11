@@ -11,7 +11,7 @@ class Dusk extends Command
     use DuskOpenAiTrait;
     use DuskTestTrait;
 
-    protected $signature = 'blocs:dusk {script}';
+    protected $signature = 'blocs:dusk {script?}';
     protected $description = 'Support laravel dusk browser tests';
     private $browser;
     private $indent;
@@ -21,6 +21,10 @@ class Dusk extends Command
         $this->install();
 
         $script = $this->argument('script');
+        if (empty($script)) {
+            exit;
+        }
+
         file_exists($script) || $script = base_path($script);
         if (!file_exists($script)) {
             $this->error('Script not found');
@@ -261,12 +265,18 @@ class Dusk extends Command
     private function install()
     {
         // Install laravel/dusk
-        file_exist(base_path('tests/DuskTestCase.php')) || \Artisan::call('dusk:install');
+        if (!file_exists(base_path('tests/DuskTestCase.php'))) {
+            $this->info('Install laravel/dusk');
+            \Artisan::call('dusk:install');
+        }
 
         // Install openai-php/laravel
-        file_exist(config_path('openai.pfp')) || \Artisan::call('openai:install');
+        if (!file_exists(config_path('openai.pfp'))) {
+            $this->info('Install openai-php/laravel');
+            \Artisan::call('openai:install');
+        }
 
         // Publish
-        file_exist(base_path('tests/Browser/blocs')) || \Artisan::call('vendor:publish', ['--provider' => 'Blocs\DuskServiceProvider']);
+        file_exists(base_path('tests/Browser/blocs')) || \Artisan::call('vendor:publish', ['--provider' => 'Blocs\DuskServiceProvider']);
     }
 }
