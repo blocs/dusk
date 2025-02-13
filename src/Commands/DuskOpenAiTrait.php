@@ -22,6 +22,14 @@ trait DuskOpenAiTrait
                 'text' => "# Action\n".$action."\n\n",
             ],
         ];
+        if (!empty($this->error)) {
+            $messageContent[] = [
+                [
+                    'type' => 'text',
+                    'text' => "# Error\n".$this->error."\n\n",
+                ],
+            ];
+        }
 
         try {
             $url = $this->browser->driver->getCurrentURL();
