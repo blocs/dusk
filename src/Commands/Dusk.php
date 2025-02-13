@@ -15,6 +15,7 @@ class Dusk extends Command
     protected $description = 'Support laravel dusk browser tests';
     private $browser;
     private $indent;
+    private $error;
 
     public function handle()
     {
@@ -108,10 +109,36 @@ class Dusk extends Command
                 $comments[count($comments) - 1]['script'] .= $funstionContent."\n";
             }
 
+            if (!count($comments)) {
+                continue;
+            }
+            empty($comments[count($comments) - 1]['script']) || $comments[count($comments) - 1]['script'] .= "\n";
+
             // Open browser
             $this->openBrowser();
 
-            foreach ($comments as $num => $comment) {
+            $num = 0;
+            while (1) {
+                if (count($comments) <= $num) {
+                    if (!config('openai.api_key')) {
+                        break;
+                    }
+
+                    // Add comment
+                    $action = $this->anticipate('Comment', ['stop']);
+
+                    // stop
+                    if ('stop' === strtolower($action)) {
+                        break;
+                    }
+
+                    $comments[] = [
+                        'comment' => $this->addIndent($action, '// '),
+                        'script' => '',
+                    ];
+                }
+                $comment = $comments[$num];
+
                 $scriptContent = $comment['script'];
                 while (1) {
                     list($this->indent, $operation) = explode('//', $comment['comment'], 2);
@@ -134,9 +161,17 @@ class Dusk extends Command
 
                     if (false === strpos($scriptContent, '$browser')) {
                         // Additional question
-                        $action = $this->anticipate(trim($scriptContent)."\n", [$operation, 'skip', 'stop']);
+                        if (config('openai.api_key')) {
+                            $action = $this->anticipate(trim($scriptContent)."\n", [$operation, 'skip', 'stop']);
+                        } else {
+                            $action = $this->anticipate(trim($scriptContent)."\n", ['skip', 'stop']);
+                        }
                     } else {
-                        $action = $this->anticipate(trim($scriptContent)."\n", ['execute', $operation, 'skip', 'stop'], 'execute');
+                        if (config('openai.api_key')) {
+                            $action = $this->anticipate(trim($scriptContent)."\n", ['execute', $operation, 'skip', 'stop'], 'execute');
+                        } else {
+                            $action = $this->anticipate(trim($scriptContent)."\n", ['execute', 'skip', 'stop'], 'execute');
+                        }
                     }
 
                     // execute
@@ -172,10 +207,11 @@ class Dusk extends Command
                         $comment['script'] = $comments[$num]['script'];
                     }
                 }
+                ++$num;
             }
 
             isset($this->browser) && $this->browser->quit();
-        };
+        }
     }
 
     private function addIndent($scriptContent, $preset = '')
@@ -191,6 +227,7 @@ class Dusk extends Command
     private function executeScript($scriptContent)
     {
         $browser = $this->browser;
+        $this->error = '';
 
         try {
             eval($scriptContent);
@@ -204,6 +241,7 @@ class Dusk extends Command
             exit;
         } catch (\Throwable $e) {
             $this->error($e->getMessage());
+            $this->error = $e->getMessage();
 
             return false;
         }
