@@ -32,7 +32,7 @@ class Dusk extends Command
             return;
         }
 
-        do {
+        while (1) {
             // Retrieve all functions from $script
             $originalScript = file_get_contents($script);
 
@@ -111,7 +111,6 @@ class Dusk extends Command
             // Open browser
             $this->openBrowser();
 
-            $updateFlag = true;
             foreach ($comments as $num => $comment) {
                 $scriptContent = $comment['script'];
                 while (1) {
@@ -137,20 +136,16 @@ class Dusk extends Command
                         // Additional question
                         $action = $this->anticipate(trim($scriptContent)."\n", [$operation, 'skip', 'stop']);
                     } else {
-                        $action = $this->anticipate(trim($scriptContent)."\n", ['execute', $operation, 'update', 'skip', 'stop'], 'execute');
+                        $action = $this->anticipate(trim($scriptContent)."\n", ['execute', $operation, 'skip', 'stop'], 'execute');
                     }
 
                     // execute
                     if ('execute' === strtolower($action)) {
                         if ($this->executeScript($scriptContent)) {
+                            $this->updateScript($script, $beforeFunction, $beforeComment, $comments, $afterComment, $afterFunction);
                             break;
                         }
                         continue;
-                    }
-
-                    // update
-                    if ('update' === strtolower($action)) {
-                        break 2;
                     }
 
                     // skip
@@ -160,7 +155,6 @@ class Dusk extends Command
 
                     // stop
                     if ('stop' === strtolower($action)) {
-                        $updateFlag = false;
                         break 2;
                     }
 
@@ -180,22 +174,8 @@ class Dusk extends Command
                 }
             }
 
-            if ($updateFlag) {
-                $this->line('Update script');
-
-                $updatedScript = '';
-                foreach ($comments as $comment) {
-                    empty($comment['comment']) || $updatedScript .= $comment['comment'];
-                    empty($comment['script']) || $updatedScript .= $comment['script'];
-                }
-                $updatedScript = preg_replace('/\n{2,}$/', "\n", $updatedScript);
-
-                $originalScript = $beforeFunction.$beforeComment.$updatedScript.$afterComment.$afterFunction;
-                file_put_contents($script, $originalScript);
-            }
-
             isset($this->browser) && $this->browser->quit();
-        } while (1);
+        };
     }
 
     private function addIndent($scriptContent, $preset = '')
@@ -259,6 +239,19 @@ class Dusk extends Command
         }
 
         return [$beforeFunction, $functionContent, $afterFunction];
+    }
+
+    private function updateScript($script, $beforeFunction, $beforeComment, $comments, $afterComment, $afterFunction)
+    {
+        $updatedScript = '';
+        foreach ($comments as $comment) {
+            empty($comment['comment']) || $updatedScript .= $comment['comment'];
+            empty($comment['script']) || $updatedScript .= $comment['script'];
+        }
+        $updatedScript = preg_replace('/\n{2,}$/', "\n", $updatedScript);
+
+        $originalScript = $beforeFunction.$beforeComment.$updatedScript.$afterComment.$afterFunction;
+        file_put_contents($script, $originalScript);
     }
 
     private function install()

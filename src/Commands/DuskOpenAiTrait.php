@@ -33,7 +33,7 @@ trait DuskOpenAiTrait
         if (0 === strpos($url, 'http://') || 0 === strpos($url, 'https:')) {
             $this->browser->storeSource('blocs');
             $htmlContent = file_get_contents(base_path('tests/Browser/source/blocs.txt'));
-            $htmlContent = $this->stripHtml($htmlContent);
+            $htmlContent = $this->minifyHtml($htmlContent);
 
             $messageContent[] = [
                 'type' => 'text',
@@ -86,7 +86,7 @@ trait DuskOpenAiTrait
         return $scriptContent;
     }
 
-    private function stripHtml($htmlContent)
+    private function minifyHtml($htmlContent)
     {
         // Remove spaces
         $htmlContent = str_replace(["\r\n", "\r", "\n"], ' ', $htmlContent);
