@@ -38,3 +38,13 @@ if (!$browser->seeLink('ユーザー管理')) {
 		->pause(1000);
 }
 ```
+
+## Dropzone に logo.png アップロードする
+```php
+$browser->attach('input.dz-hidden-input', storage_path('logo.png'));
+```
+
+## 画面の一番下までスクロールする
+```php
+$browser->scrollIntoView('footer');
+```

@@ -15,7 +15,8 @@ class Dusk extends Command
     protected $description = 'Support laravel dusk browser tests';
     private $browser;
     private $indent;
-    private $error;
+    private $errorMessage;
+    private $currentScript;
 
     public function handle()
     {
@@ -174,15 +175,6 @@ class Dusk extends Command
                         }
                     }
 
-                    // execute
-                    if ('execute' === strtolower($action)) {
-                        if ($this->executeScript($scriptContent)) {
-                            $this->updateScript($script, $beforeFunction, $beforeComment, $comments, $afterComment, $afterFunction);
-                            break;
-                        }
-                        continue;
-                    }
-
                     // skip
                     if ('skip' === strtolower($action)) {
                         break;
@@ -191,6 +183,18 @@ class Dusk extends Command
                     // stop
                     if ('stop' === strtolower($action)) {
                         break 2;
+                    }
+
+                    // execute
+                    if ('execute' === strtolower($action)) {
+                        if ($this->executeScript($scriptContent)) {
+                            $this->updateScript($script, $beforeFunction, $beforeComment, $comments, $afterComment, $afterFunction);
+                            break;
+                        }
+
+                        // Error happend
+                        $scriptContent = '';
+                        continue;
                     }
 
                     // generate
@@ -227,7 +231,7 @@ class Dusk extends Command
     private function executeScript($scriptContent)
     {
         $browser = $this->browser;
-        $this->error = '';
+        $this->errorMessage = '';
 
         try {
             eval($scriptContent);
@@ -241,7 +245,8 @@ class Dusk extends Command
             exit;
         } catch (\Throwable $e) {
             $this->error($e->getMessage());
-            $this->error = $e->getMessage();
+            $this->errorMessage = $e->getMessage();
+            $this->currentScript = $scriptContent;
 
             return false;
         }

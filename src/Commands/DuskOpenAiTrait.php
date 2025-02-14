@@ -22,12 +22,15 @@ trait DuskOpenAiTrait
                 'text' => "# Action\n".$action."\n\n",
             ],
         ];
-        if (!empty($this->error)) {
+        if (!empty($this->errorMessage)) {
             $messageContent[] = [
-                [
-                    'type' => 'text',
-                    'text' => "# Error\n".$this->error."\n\n",
-                ],
+                'type' => 'text',
+                'text' => "# Error\n".$this->errorMessage."\n\n",
+            ];
+
+            $messageContent[] = [
+                'type' => 'text',
+                'text' => "# Current script\n".$this->currentScript."\n\n",
             ];
         }
 
