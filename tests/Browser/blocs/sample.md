@@ -51,3 +51,10 @@ $browser->scrollIntoView('.avatar')
 	->waitFor('.avatar', 5)
 	->click('.avatar');
 ```
+
+## 検索フィールドに 椎名林檎 と入力して、エンターする
+```php
+$browser->type('input[name="search_query"]', '椎名林檎')
+	->keys('input[name="search_query"]', \Facebook\WebDriver\WebDriverKeys::ENTER)
+	->pause(1000);
+```
