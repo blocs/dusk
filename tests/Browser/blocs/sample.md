@@ -14,6 +14,7 @@
 
 ## press
 - ボタンをクリックする
+- press 実行後は、必ず pause(1000) を実行する
 
 ## seeLink
 - リンクの表示をチェックする
@@ -27,8 +28,8 @@ fake()->name()
 ## モーダルの表示後に新規作成ボタンをクリックする
 ```php
 $browser->click('button[data-bs-target="#modalStore"]')
-$browser->waitFor('#modalStore', 5);
-$browser->press('#modalStore .btn-primary');
+	->waitFor('#modalStore', 5)
+	->press('#modalStore .btn-primary');
 ```
 
 ## ユーザー管理リンクの表示をチェックする
@@ -44,7 +45,9 @@ if (!$browser->seeLink('ユーザー管理')) {
 $browser->attach('input.dz-hidden-input', storage_path('logo.png'));
 ```
 
-## 画面の一番下までスクロールする
+## アバター画像までスクロールして、アバター画像をクリックする
 ```php
-$browser->scrollIntoView('footer');
+$browser->scrollIntoView('.avatar')
+	->waitFor('.avatar', 5)
+	->click('.avatar');
 ```
