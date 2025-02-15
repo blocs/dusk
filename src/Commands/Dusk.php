@@ -44,10 +44,9 @@ class Dusk extends Command
             // Choose action
             $actions = ['run'];
             foreach ($functions[1] as $function) {
-                // Add test functions
-                if (0 === strpos($function, 'test')) {
-                    $actions[] = $function.' update';
-                }
+                // Add functions
+                $function = trim($function);
+                empty($function) || $actions[] = $function.' update';
             }
             $actions[] = 'exit';
             $action = $this->anticipate('Action', $actions);
@@ -139,39 +138,66 @@ class Dusk extends Command
                     ];
                 }
                 $comment = $comments[$num];
+                $additionalRequest = [];
 
                 $scriptContent = $comment['script'];
+                $this->currentScript = $scriptContent;
+
                 while (1) {
-                    list($this->indent, $operation) = explode('//', $comment['comment'], 2);
-                    $operation = trim($operation);
+                    list($this->indent, $request) = explode('//', $comment['comment'], 2);
+                    $request = trim($request);
 
                     $this->line(trim($comment['comment']));
 
-                    if (empty(trim($scriptContent))) {
+                    if (!empty(trim($scriptContent))) {
+                        $action = 'execute';
+                    } else {
                         // generate
-                        $scriptContent = $this->generateCode($operation);
+                        list($result, $scriptContent) = $this->generateCode($request, $additionalRequest);
+                        $this->currentScript = $scriptContent;
 
-                        if (false === strpos($scriptContent, '$browser')) {
+                        if (false === $result) {
                             $comments[$num]['script'] = $this->addIndent($scriptContent, '// ')."\n";
-                            $comment['script'] = $comments[$num]['script'];
+                            $action = $this->anticipate(trim($scriptContent)."\n", ['skip', 'stop'], 'skip');
                         } else {
                             $comments[$num]['script'] = $this->addIndent($scriptContent)."\n";
-                            $comment['script'] = $comments[$num]['script'];
+                            $action = $this->anticipate(trim($scriptContent)."\n", ['execute', 'skip', 'stop'], 'execute');
                         }
+                        $comment['script'] = $comments[$num]['script'];
                     }
 
-                    if (false === strpos($scriptContent, '$browser')) {
-                        // Additional question
-                        if (config('openai.api_key')) {
-                            $action = $this->anticipate(trim($scriptContent)."\n", [$operation, 'skip', 'stop']);
-                        } else {
-                            $action = $this->anticipate(trim($scriptContent)."\n", ['skip', 'stop']);
-                        }
-                    } else {
-                        if (config('openai.api_key')) {
-                            $action = $this->anticipate(trim($scriptContent)."\n", ['execute', $operation, 'skip', 'stop'], 'execute');
-                        } else {
-                            $action = $this->anticipate(trim($scriptContent)."\n", ['execute', 'skip', 'stop'], 'execute');
+                    // execute
+                    if ('execute' === strtolower($action)) {
+                        $browser = $this->browser;
+                        $this->errorMessage = '';
+
+                        try {
+                            eval($scriptContent);
+
+                            $this->updateScript($script, $beforeFunction, $beforeComment, $comments, $afterComment, $afterFunction);
+                            break;
+                        } catch (NoSuchWindowException $e) {
+                            $browser->quit();
+                            $this->error('Browser closed');
+                            exit;
+                        } catch (InvalidSessionIdException $e) {
+                            $browser->quit();
+                            $this->error('Browser closed');
+                            exit;
+                        } catch (\BadMethodCallException $e) {
+                            $this->info('skip');
+                            break;
+                        } catch (\Throwable $e) {
+                            // Error happend
+                            $this->error($e->getMessage());
+                            $this->errorMessage = $e->getMessage();
+
+                            $action = $this->anticipate(trim($scriptContent)."\n", ['retry', 'skip', 'stop'], 'retry');
+
+                            // retry
+                            if ('retry' === strtolower($action)) {
+                                continue;
+                            }
                         }
                     }
 
@@ -185,31 +211,9 @@ class Dusk extends Command
                         break 2;
                     }
 
-                    // execute
-                    if ('execute' === strtolower($action)) {
-                        if ($this->executeScript($scriptContent)) {
-                            $this->updateScript($script, $beforeFunction, $beforeComment, $comments, $afterComment, $afterFunction);
-                            break;
-                        }
-
-                        // Error happend
-                        $scriptContent = '';
-                        continue;
-                    }
-
-                    // generate
-                    $comments[$num]['comment'] = $this->addIndent($action, '// ');
-                    $comment['comment'] = $comments[$num]['comment'];
-
-                    $scriptContent = $this->generateCode($action);
-
-                    if (false === strpos($scriptContent, '$browser')) {
-                        $comments[$num]['script'] = $this->addIndent($scriptContent, '// ')."\n";
-                        $comment['script'] = $comments[$num]['script'];
-                    } else {
-                        $comments[$num]['script'] = $this->addIndent($scriptContent)."\n";
-                        $comment['script'] = $comments[$num]['script'];
-                    }
+                    // Additional request
+                    empty($action) || $additionalRequest[] = $action;
+                    $scriptContent = '';
                 }
                 ++$num;
             }
@@ -226,32 +230,6 @@ class Dusk extends Command
         }
 
         return $result;
-    }
-
-    private function executeScript($scriptContent)
-    {
-        $browser = $this->browser;
-        $this->errorMessage = '';
-
-        try {
-            eval($scriptContent);
-        } catch (NoSuchWindowException $e) {
-            $browser->quit();
-            $this->error('Browser closed');
-            exit;
-        } catch (InvalidSessionIdException $e) {
-            $browser->quit();
-            $this->error('Browser closed');
-            exit;
-        } catch (\Throwable $e) {
-            $this->error($e->getMessage());
-            $this->errorMessage = $e->getMessage();
-            $this->currentScript = $scriptContent;
-
-            return false;
-        }
-
-        return true;
     }
 
     private function splitScript($scriptContent, $function)

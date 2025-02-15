@@ -6,7 +6,7 @@ use OpenAI\Laravel\Facades\OpenAI;
 
 trait DuskOpenAiTrait
 {
-    private function generateCode($action)
+    private function generateCode($request, $additionalRequest)
     {
         $messageContent = [
             [
@@ -19,18 +19,27 @@ trait DuskOpenAiTrait
             ],
             [
                 'type' => 'text',
-                'text' => "# Action\n".$action."\n\n",
+                'text' => "# Request\n".$request."\n\n",
             ],
         ];
+        if (!empty($additionalRequest)) {
+            foreach ($additionalRequest as $request) {
+                $messageContent[] = [
+                    'type' => 'text',
+                    'text' => "# Additional request\n".$request."\n\n",
+                ];
+            }
+        }
         if (!empty($this->errorMessage)) {
             $messageContent[] = [
                 'type' => 'text',
                 'text' => "# Error\n".$this->errorMessage."\n\n",
             ];
-
+        }
+        if (!empty(trim($this->currentScript))) {
             $messageContent[] = [
                 'type' => 'text',
-                'text' => "# Current script\n".$this->currentScript."\n\n",
+                'text' => "# Current script```php\n".$this->currentScript."\n```\n\n",
             ];
         }
 
@@ -90,11 +99,13 @@ trait DuskOpenAiTrait
 
         // Get updated function
         $scriptContent = $result->choices[0]->message->content;
+        $result = strpos($scriptContent, '```php');
+
         $scriptContent = str_replace('```php', '', $scriptContent);
         $scriptContent = str_replace('```', '', $scriptContent);
         $scriptContent = trim($scriptContent);
 
-        return $scriptContent;
+        return [$result, $scriptContent];
     }
 
     private function minifyHtml($htmlContent)
