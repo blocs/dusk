@@ -1,19 +1,18 @@
-# 説明
-- $browserはLaravel\Dusk\Browserクラスのインスタンスです
-- $browserにチェーンメソッドで処理を追加してコードを生成します
-
-# 使用するメソッド
+# メソッドルール
 ## clickLink
 - タイトルで要素を指定して、リンクをクリックする
-- clickよりclickLinkを優先して使ってください
-- 画面のHTMLにタイトルのリンク要素が１つだけの時は、clickLinkを使ってください
+- clickよりclickLinkを優先して使う
+- 画面のHTMLにタイトルのリンク要素が１つだけの時は、clickLinkを使う
 
 ## click
 - CSSセレクターで要素を指定して、リンクをクリックする
-- 画面のHTMLに同じタイトルのリンク要素が複数ある時は、できるだけ正確に要素をCSSセレクターで指定してclickを使ってください
+- 画面のHTMLに同じタイトルのリンク要素が複数ある時は、できるだけ正確に要素をCSSセレクターで指定してclickを使う
+- Element is not clickable エラーの時は、CSSセレクターで指定した要素まで scrollIntoView でスクロールする
 
 ## press
 - ボタンをクリックする
+- できるだけタイトルで要素を指定する
+- 画面のHTMLに同じタイトルのボタン要素が複数ある時は、できるだけ正確に要素をCSSセレクターで指定する
 - press 実行後は、必ず pause(1000) を実行する
 
 ## seeLink
@@ -28,7 +27,7 @@ fake()->name()
 ## モーダルの表示後に新規作成ボタンをクリックする
 ```php
 $browser->click('button[data-bs-target="#modalStore"]')
-	->waitFor('#modalStore', 5)
+	->pause(1000)
 	->press('#modalStore .btn-primary');
 ```
 
@@ -48,7 +47,7 @@ $browser->attach('input.dz-hidden-input', storage_path('logo.png'));
 ## アバター画像までスクロールして、アバター画像をクリックする
 ```php
 $browser->scrollIntoView('.avatar')
-	->waitFor('.avatar', 5)
+	->pause(1000)
 	->click('.avatar');
 ```
 
