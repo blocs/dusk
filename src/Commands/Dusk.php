@@ -71,55 +71,23 @@ class Dusk extends Command
             // Target function
             $function = substr($action, 0, -7);
 
-            $originalScript = file_get_contents($script);
-            list($beforeFunction, $functionContent, $afterFunction) = $this->splitScript($originalScript, $function);
-
-            // Retrieve comments
-            $funstionContents = explode("\n", $functionContent);
-            strlen(last($funstionContents)) || array_pop($funstionContents);
-
-            $beforeComment = '';
-            while ($funstionContents) {
-                if (preg_match('/^\s*\/\/\s*/', $funstionContents[0])) {
-                    break;
-                }
-
-                $beforeComment .= array_shift($funstionContents)."\n";
-            }
-
-            $afterComment = '';
-            while ($funstionContents) {
-                if (preg_match('/[^\s\}\)\;]/', last($funstionContents))) {
-                    break;
-                }
-
-                $afterComment = array_pop($funstionContents)."\n".$afterComment;
-            }
-
-            $comments = [];
-            foreach ($funstionContents as $funstionContent) {
-                if (preg_match('/^\s*\/\/\s*/', $funstionContent)) {
-                    $comments[] = [
-                        'comment' => $funstionContent."\n",
-                        'script' => '',
-                    ];
-                    continue;
-                }
-
-                $comments[count($comments) - 1]['script'] .= $funstionContent."\n";
-            }
-
+            // Get comment
+            list($buff, $buff, $comments) = $this->getComment($script, $function);
             if (!count($comments)) {
                 continue;
             }
-            empty($comments[count($comments) - 1]['script']) || $comments[count($comments) - 1]['script'] .= "\n";
 
             // Open browser
             $this->openBrowser();
 
-            $num = 0;
+            $commentNum = 0;
             while (1) {
-                if (count($comments) <= $num) {
+                // Get comment
+                list($buff, $buff, $comments) = $this->getComment($script, $function);
+
+                if (count($comments) > $commentNum) {
+                    $comment = $comments[$commentNum];
+                } else {
                     if (!config('openai.api_key')) {
                         break;
                     }
@@ -132,16 +100,14 @@ class Dusk extends Command
                         break;
                     }
 
-                    $comments[] = [
+                    $comment = [
                         'comment' => $this->addIndent($action, '// '),
                         'script' => '',
                     ];
                 }
-                $comment = $comments[$num];
                 $additionalRequest = [];
 
-                $scriptContent = $comment['script'];
-                $this->currentScript = $scriptContent;
+                $this->currentScript = $comment['script'];
 
                 while (1) {
                     list($this->indent, $request) = explode('//', $comment['comment'], 2);
@@ -149,21 +115,20 @@ class Dusk extends Command
 
                     $this->line(trim($comment['comment']));
 
-                    if (!empty(trim($scriptContent))) {
+                    if (!empty(trim($comment['script']))) {
                         $action = 'execute';
                     } else {
                         // generate
-                        list($result, $scriptContent) = $this->generateCode($request, $additionalRequest);
-                        $this->currentScript = $scriptContent;
+                        list($result, $comment['script']) = $this->generateCode($request, $additionalRequest);
+                        $this->currentScript = $comment['script'];
 
                         if (false === $result) {
-                            $comments[$num]['script'] = $this->addIndent($scriptContent, '// ')."\n";
-                            $action = $this->anticipate(trim($scriptContent)."\n", ['skip', 'stop'], 'skip');
+                            $comment['script'] = $this->addIndent($comment['script'], '// ')."\n";
+                            $action = $this->anticipate(trim($$comment['script'])."\n", ['skip', 'stop'], 'skip');
                         } else {
-                            $comments[$num]['script'] = $this->addIndent($scriptContent)."\n";
-                            $action = $this->anticipate(trim($scriptContent)."\n", ['execute', 'skip', 'stop'], 'execute');
+                            $comment['script'] = $this->addIndent($comment['script'])."\n";
+                            $action = $this->anticipate(trim($comment['script'])."\n", ['execute', 'skip', 'stop'], 'execute');
                         }
-                        $comment['script'] = $comments[$num]['script'];
                     }
 
                     // execute
@@ -172,9 +137,9 @@ class Dusk extends Command
                         $this->errorMessage = '';
 
                         try {
-                            eval($scriptContent);
+                            eval($comment['script']);
 
-                            $this->updateScript($script, $beforeFunction, $beforeComment, $comments, $afterComment, $afterFunction);
+                            $this->updateScript($script, $function, $commentNum, $comment);
                             break;
                         } catch (NoSuchWindowException $e) {
                             $browser->quit();
@@ -192,7 +157,7 @@ class Dusk extends Command
                             $this->error($e->getMessage());
                             $this->errorMessage = $e->getMessage();
 
-                            $action = $this->anticipate(trim($scriptContent)."\n", ['retry', 'skip', 'stop'], 'retry');
+                            $action = $this->anticipate(trim($comment['script'])."\n", ['retry', 'skip', 'stop']);
 
                             // retry
                             if ('retry' === strtolower($action)) {
@@ -213,9 +178,9 @@ class Dusk extends Command
 
                     // Additional request
                     empty($action) || $additionalRequest[] = $action;
-                    $scriptContent = '';
+                    $comment['script'] = '';
                 }
-                ++$num;
+                ++$commentNum;
             }
 
             isset($this->browser) && $this->browser->quit();
@@ -262,8 +227,58 @@ class Dusk extends Command
         return [$beforeFunction, $functionContent, $afterFunction];
     }
 
-    private function updateScript($script, $beforeFunction, $beforeComment, $comments, $afterComment, $afterFunction)
+    private function getComment($script, $function)
     {
+        $originalScript = file_get_contents($script);
+        list($beforeFunction, $functionContent, $afterFunction) = $this->splitScript($originalScript, $function);
+
+        // Retrieve comments
+        $funstionContents = explode("\n", $functionContent);
+        strlen(last($funstionContents)) || array_pop($funstionContents);
+
+        $beforeComment = '';
+        while ($funstionContents) {
+            if (preg_match('/^\s*\/\/\s*/', $funstionContents[0])) {
+                break;
+            }
+
+            $beforeComment .= array_shift($funstionContents)."\n";
+        }
+
+        $afterComment = '';
+        while ($funstionContents) {
+            if (preg_match('/[^\s\}\)\;]/', last($funstionContents))) {
+                break;
+            }
+
+            $afterComment = array_pop($funstionContents)."\n".$afterComment;
+        }
+
+        $comments = [];
+        foreach ($funstionContents as $funstionContent) {
+            if (preg_match('/^\s*\/\/\s*/', $funstionContent)) {
+                $comments[] = [
+                    'comment' => $funstionContent."\n",
+                    'script' => '',
+                ];
+                continue;
+            }
+
+            $comments[count($comments) - 1]['script'] .= $funstionContent."\n";
+        }
+
+        if (count($comments)) {
+            empty($comments[count($comments) - 1]['script']) || $comments[count($comments) - 1]['script'] .= "\n";
+        }
+
+        return [$beforeFunction, $beforeComment, $comments, $afterComment, $afterFunction];
+    }
+
+    private function updateScript($script, $function, $commentNum, $comment)
+    {
+        list($beforeFunction, $beforeComment, $comments, $afterComment, $afterFunction) = $this->getComment($script, $function);
+        $comments[$commentNum] = $comment;
+
         $updatedScript = '';
         foreach ($comments as $comment) {
             empty($comment['comment']) || $updatedScript .= $comment['comment'];
