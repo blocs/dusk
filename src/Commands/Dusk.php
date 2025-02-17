@@ -49,7 +49,7 @@ class Dusk extends Command
                 empty($function) || $actions[] = $function.' edit';
             }
             $actions[] = 'exit';
-            $action = $this->anticipate('Action', $actions);
+            $action = $this->anticipate('Command', $actions);
 
             // run
             if ('run' === strtolower($action)) {
@@ -69,7 +69,7 @@ class Dusk extends Command
             }
 
             // Target function
-            $function = substr($action, 0, -7);
+            $function = substr($action, 0, -5);
 
             // Get comment
             list($buff, $buff, $comments) = $this->getComment($script, $function);
@@ -92,8 +92,8 @@ class Dusk extends Command
                         break;
                     }
 
-                    // Add comment
-                    $action = $this->anticipate('Comment', ['stop']);
+                    // Add step
+                    $action = $this->anticipate('Add step', ['stop']);
 
                     // stop
                     if ('stop' === strtolower($action)) {
