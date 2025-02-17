@@ -46,7 +46,7 @@ class Dusk extends Command
             foreach ($functions[1] as $function) {
                 // Add functions
                 $function = trim($function);
-                empty($function) || $actions[] = $function.' update';
+                empty($function) || $actions[] = $function.' edit';
             }
             $actions[] = 'exit';
             $action = $this->anticipate('Action', $actions);
@@ -63,8 +63,8 @@ class Dusk extends Command
                 exit;
             }
 
-            // update
-            if (' update' !== substr($action, -7)) {
+            // edit
+            if (' edit' !== substr($action, -5)) {
                 continue;
             }
 
