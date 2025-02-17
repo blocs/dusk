@@ -13,10 +13,13 @@
 - ボタンをクリックする
 - できるだけタイトルで要素を指定する
 - 画面のHTMLに同じタイトルのボタン要素が複数ある時は、できるだけ正確に要素をCSSセレクターで指定する
-- press 実行後は、必ず pause(1000) を実行する
+- press 実行後に、必ず pause(1000) を実行する
 
 ## seeLink
 - リンクの表示をチェックする
+
+## waitFor
+- waitFor 実行前に、必ず screenshot('waitFor') を実行する
 
 # サンプルコード
 ## 適当な名前を生成する
@@ -27,8 +30,9 @@ fake()->name()
 ## モーダルの表示後に新規作成ボタンをクリックする
 ```php
 $browser->click('button[data-bs-target="#modalStore"]')
-	->pause(1000)
-	->press('#modalStore .btn-primary');
+	->screenshot('waitFor')->waitFor('#modalStore')
+	->press('#modalStore .btn-primary')
+	->pause(1000);
 ```
 
 ## ユーザー管理リンクの表示をチェックする
