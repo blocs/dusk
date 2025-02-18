@@ -124,7 +124,7 @@ class Dusk extends Command
 
                         if (false === $result) {
                             $comment['script'] = $this->addIndent($comment['script'], '// ')."\n";
-                            $action = $this->anticipate(trim($$comment['script'])."\n", ['skip', 'stop'], 'skip');
+                            $action = $this->anticipate(trim($comment['script'])."\n", ['skip', 'stop'], 'skip');
                         } else {
                             $comment['script'] = $this->addIndent($comment['script'])."\n";
                             $action = $this->anticipate(trim($comment['script'])."\n", ['execute', 'skip', 'stop'], 'execute');
