@@ -65,7 +65,7 @@ trait DuskOpenAiTrait
 
         try {
             $result = OpenAI::chat()->create([
-                'model' => 'gpt-4o-mini',
+                'model' => config('openai.model') ?? 'gpt-4o-mini',
                 'messages' => [
                     [
                         'role' => 'system',
