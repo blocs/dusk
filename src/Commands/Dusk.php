@@ -105,7 +105,7 @@ class Dusk extends Command
                         'script' => '',
                     ];
                 }
-                $additionalRequest = [];
+                $additionalRequest = '';
 
                 $this->currentScript = $comment['script'];
 
@@ -177,7 +177,7 @@ class Dusk extends Command
                     }
 
                     // Additional request
-                    empty($action) || $additionalRequest[] = $action;
+                    empty($action) || $additionalRequest = $action;
                     $comment['script'] = '';
                 }
                 ++$commentNum;
