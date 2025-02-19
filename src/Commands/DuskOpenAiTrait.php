@@ -23,12 +23,10 @@ trait DuskOpenAiTrait
             ],
         ];
         if (!empty($additionalRequest)) {
-            foreach ($additionalRequest as $request) {
-                $messageContent[] = [
-                    'type' => 'text',
-                    'text' => "# Additional request\n".$request."\n\n",
-                ];
-            }
+            $messageContent[] = [
+                'type' => 'text',
+                'text' => "# Additional request\n".$additionalRequest."\n\n",
+            ];
         }
         if (!empty($this->errorMessage)) {
             $messageContent[] = [
@@ -64,8 +62,18 @@ trait DuskOpenAiTrait
         }
 
         try {
+            if (empty(config('openai.model'))) {
+                if (empty($additionalRequest)) {
+                    $model = 'gpt-4o-mini';
+                } else {
+                    $model = 'gpt-4o';
+                }
+            } else {
+                $model = config('openai.model');
+            }
+
             $result = OpenAI::chat()->create([
-                'model' => config('openai.model') ?? 'gpt-4o-mini',
+                'model' => $model,
                 'messages' => [
                     [
                         'role' => 'system',
