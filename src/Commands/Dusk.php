@@ -48,7 +48,7 @@ class Dusk extends Command
                 $function = trim($function);
                 empty($function) || $actions[] = $function.' edit';
             }
-            $actions[] = 'exit';
+            $actions[] = 'quit';
             $action = $this->anticipate('Command', $actions);
 
             // run
@@ -57,8 +57,8 @@ class Dusk extends Command
                 continue;
             }
 
-            // exit
-            if ('exit' === strtolower($action) || 'bye' === strtolower($action)) {
+            // quit
+            if ('quit' === strtolower($action) || 'exit' === strtolower($action) || 'bye' === strtolower($action)) {
                 isset($this->browser) && $this->browser->quit();
                 exit;
             }
@@ -93,10 +93,10 @@ class Dusk extends Command
                     }
 
                     // Add step
-                    $action = $this->anticipate('Add step', ['stop']);
+                    $action = $this->anticipate('Add step', ['quit']);
 
-                    // stop
-                    if ('stop' === strtolower($action)) {
+                    // quit
+                    if ('quit' === strtolower($action) || 'exit' === strtolower($action) || 'bye' === strtolower($action)) {
                         break;
                     }
 
@@ -124,10 +124,10 @@ class Dusk extends Command
 
                         if (false === $result) {
                             $comment['script'] = $this->addIndent($comment['script'], '// ')."\n";
-                            $action = $this->anticipate(trim($comment['script'])."\n", ['skip', 'stop'], 'skip');
+                            $action = $this->anticipate(trim($comment['script'])."\n", ['skip', 'quit'], 'skip');
                         } else {
                             $comment['script'] = $this->addIndent($comment['script'])."\n";
-                            $action = $this->anticipate(trim($comment['script'])."\n", ['execute', 'skip', 'stop'], 'execute');
+                            $action = $this->anticipate(trim($comment['script'])."\n", ['execute', 'skip', 'quit'], 'execute');
                         }
                     }
 
@@ -157,7 +157,7 @@ class Dusk extends Command
                             $this->error($e->getMessage());
                             $this->errorMessage = $e->getMessage();
 
-                            $action = $this->anticipate(trim($comment['script'])."\n", ['retry', 'skip', 'stop']);
+                            $action = $this->anticipate(trim($comment['script'])."\n", ['retry', 'skip', 'quit']);
 
                             // retry
                             if ('retry' === strtolower($action)) {
@@ -171,8 +171,8 @@ class Dusk extends Command
                         break;
                     }
 
-                    // stop
-                    if ('stop' === strtolower($action)) {
+                    // quit
+                    if ('quit' === strtolower($action) || 'exit' === strtolower($action) || 'bye' === strtolower($action)) {
                         break 2;
                     }
 
