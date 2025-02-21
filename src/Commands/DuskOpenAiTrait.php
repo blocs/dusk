@@ -127,7 +127,16 @@ trait DuskOpenAiTrait
 
         // Remove tags
         foreach (['head', 'script', 'style', 'pre', 'path', 'svg'] as $tag) {
-            $htmlContent = preg_replace('/<'.$tag.'\b[^<]*(?:(?!<\/'.$tag.'>)<[^<]*)*<\/'.$tag.'>/i', '', $htmlContent);
+            $htmlList = preg_split('/<\s*'.$tag.'/i', $htmlContent);
+            $htmlContent = array_shift($htmlList);
+            foreach ($htmlList as $html) {
+                $html = preg_split('/<\s*\/\s*'.$tag.'\s*>/i', $html, 2);
+                if (count($html) > 1) {
+                    $htmlContent .= $html[1];
+                } else {
+                    $htmlContent .= $html[0];
+                }
+            }
         }
 
         // Remove attributes
