@@ -22,6 +22,11 @@
 - waitFor 実行前に、必ず screenshot('waitFor') を実行する
 
 # サンプルコード
+## さがしているのは猫 の飼い方？と表示されることを確認する
+```php
+$browser->assertSee('さがしているのは猫 の飼い方？');
+```
+
 ## 適当な名前を生成する
 ```php
 fake()->name()
