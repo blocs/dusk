@@ -201,7 +201,7 @@ class Dusk extends Command
     {
         $scriptContent = explode("\n", rtrim($scriptContent));
         $beforeFunction = '';
-        $functionContent = '';
+        $functionContents = [];
         $afterFunction = '';
 
         $flag = false;
@@ -213,16 +213,21 @@ class Dusk extends Command
                 $flag = true;
             }
 
-            if (!$flag && empty($functionContent)) {
+            if (!$flag && empty($functionContents)) {
                 $beforeFunction .= $line."\n";
             }
             if ($flag) {
-                $functionContent .= $line."\n";
+                $functionContents[] = $line."\n";
             }
-            if (!$flag && !empty($functionContent)) {
+            if (!$flag && !empty($functionContents)) {
                 $afterFunction .= $line."\n";
             }
         }
+
+        while ($functionContents && false === strpos($functionContents[count($functionContents) - 1], '}')) {
+            $afterFunction = array_pop($functionContents).$afterFunction;
+        }
+        $functionContent = implode('', $functionContents);
 
         return [$beforeFunction, $functionContent, $afterFunction];
     }
