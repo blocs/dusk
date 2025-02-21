@@ -37,7 +37,7 @@ trait DuskOpenAiTrait
         if (!empty(trim($this->currentScript))) {
             $messageContent[] = [
                 'type' => 'text',
-                'text' => "# Current script```php\n".$this->currentScript."\n```\n\n",
+                'text' => "# Current code```php\n".$this->currentScript."\n```\n\n",
             ];
         }
 
