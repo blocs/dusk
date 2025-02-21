@@ -1,7 +1,7 @@
 # タスク
 - 指定された Request が不明な時は、必ず私にヒアリングしてください
-- Current script が指定された時は、Current script と違うコードを提案してください
-- Error が指定された時は、Error を解消できるように Current script を修正してください
+- Current code が指定された時は、Current code と違うコードを提案してください
+- Error が指定された時は、Error を解消できるように Current code を修正してください
 - 指定された Request どおり動くように Laravel Dusk で動くコードを生成してください
 - 指定された Request どおりに動かせず、追加の指示が必要な時は、必ず私にヒアリングしてください
 - Additional request も参考にして、Laravel Dusk で動くコードを生成してください
