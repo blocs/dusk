@@ -52,4 +52,4 @@ OPENAI_API_KEY=your-api-key-here
 ```
 
 # 使い方
-[Qiita:「Laravel Dusk × GPT-4o」でブラウザテストを超効率化！最強ツールを紹介します](https://qiita.com/hyada/items/c40ae6a8fc6fff05c243)
+[Qiita:「Laravel Dusk × GPT-4o」でブラウザテストを超効率化！最強ツールを紹介します](https://qiita.com/yokoba/items/18adfeb0978a5155c11b)
