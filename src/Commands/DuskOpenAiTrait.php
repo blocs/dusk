@@ -15,10 +15,6 @@ trait DuskOpenAiTrait
             ],
             [
                 'type' => 'text',
-                'text' => file_get_contents(base_path('tests/Browser/blocs/sample.md'))."\n\n",
-            ],
-            [
-                'type' => 'text',
                 'text' => "# Request\n".$request."\n\n",
             ],
         ];
@@ -28,18 +24,23 @@ trait DuskOpenAiTrait
                 'text' => "# Additional request\n".$additionalRequest."\n\n",
             ];
         }
+        if (!empty(trim($this->currentScript))) {
+            $messageContent[] = [
+                'type' => 'text',
+                'text' => "# Current code\n```php\n".$this->currentScript."\n```\n\n",
+            ];
+        }
         if (!empty($this->errorMessage)) {
             $messageContent[] = [
                 'type' => 'text',
                 'text' => "# Error\n".$this->errorMessage."\n\n",
             ];
         }
-        if (!empty(trim($this->currentScript))) {
-            $messageContent[] = [
-                'type' => 'text',
-                'text' => "# Current code```php\n".$this->currentScript."\n```\n\n",
-            ];
-        }
+
+        $messageContent[] = [
+            'type' => 'text',
+            'text' => file_get_contents(base_path('tests/Browser/blocs/sample.md'))."\n\n",
+        ];
 
         try {
             $url = $this->browser->driver->getCurrentURL();
