@@ -22,7 +22,7 @@ Laravelのブラウザテストサポートツール
 [OPENAI_APIキーの取得方法](https://qiita.com/kurata04/items/a10bdc44cc0d1e62dad3)
 
 
-## 1. Laravel プロジェクト作成
+## 1. テスト用 Laravel プロジェクト作成
 ```bash
 composer create-project laravel/laravel [プロジェクト名]
 例） composer create-project laravel/laravel dusk-web-test
@@ -40,10 +40,16 @@ php artisan dusk:install
 php artisan openai:install
 ```
 
-## 4. envの設定
+## 4. Laravel Dusk を実行
+```bash
+php artisan dusk
+```
+初回実行時にエラーが発生する場合があります。その場合は、再度実行してください。
+
+## 5. envの設定
 ```bash
 OPENAI_API_KEY=your-api-key-here
 ```
 
 # 使い方
-[Qiita:「Laravel Dusk × GPT-4o」でブラウザテストを爆速自動化！最強ツールを紹介します](https://qiita.com/hyada/items/c40ae6a8fc6fff05c243)
+[Qiita:「Laravel Dusk × GPT-4o」でブラウザテストを超効率化！最強ツールを紹介します](https://qiita.com/hyada/items/c40ae6a8fc6fff05c243)
