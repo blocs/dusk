@@ -35,7 +35,7 @@ fake()->name()
 ## モーダルの表示後に新規作成ボタンをクリックする
 ```php
 $browser->click('button[data-bs-target="#modalStore"]')
-	->screenshot('waitFor')->waitFor('#modalStore')
+	->waitFor('#modalStore')
 	->press('#modalStore .btn-primary')
 	->pause(1000);
 ```
