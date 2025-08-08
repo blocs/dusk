@@ -65,9 +65,9 @@ trait DuskOpenAiTrait
         try {
             if (empty(config('openai.model'))) {
                 if (empty($additionalRequest)) {
-                    $model = 'gpt-4o-mini';
+                    $model = 'gpt-5-mini';
                 } else {
-                    $model = 'gpt-4o';
+                    $model = 'gpt-5';
                 }
             } else {
                 $model = config('openai.model');
