@@ -7,7 +7,7 @@
         "Laravel",
         "Dusk",
         "Open AI",
-        "GPT-4o",
+        "GPT-5",
         "BLOCS",
         "Package"
     ],
@@ -32,7 +32,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Blocs\\": "src\/"
+            "Blocs\\": "src\/",
+            "Blocs\\Commands\\": "commands\/"
         }
     }
 }
