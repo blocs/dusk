@@ -220,10 +220,10 @@ class Dusk extends Command
 
         $flag = false;
         foreach ($scriptContent as $num => $line) {
-            if ($flag && (preg_match('/\s+function\s+/', $line) || count($scriptContent) <= $num + 1)) {
+            if ($flag && (preg_match('/public\s+function\s+/', $line) || count($scriptContent) <= $num + 1)) {
                 $flag = false;
             }
-            if (preg_match('/\s+function\s+'.$function.'\(/', $line)) {
+            if (preg_match('/public\s+function\s+'.$function.'\(/', $line)) {
                 $flag = true;
             }
 
@@ -264,13 +264,15 @@ class Dusk extends Command
             $beforeComment .= array_shift($funstionContents)."\n";
         }
 
+        $num = 0;
         $afterComment = '';
         while ($funstionContents) {
-            if (preg_match('/[^\s\}\)\;]/', last($funstionContents))) {
+            if (preg_match('/[^\s\}\)\;]/', last($funstionContents)) || $num > 1) {
                 break;
             }
 
             $afterComment = array_pop($funstionContents)."\n".$afterComment;
+            ++$num;
         }
 
         $comments = [];
