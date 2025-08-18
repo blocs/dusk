@@ -4,7 +4,7 @@ namespace Blocs\Commands;
 
 use OpenAI\Laravel\Facades\OpenAI;
 
-trait DuskOpenAiTrait
+trait DuskOpenAITrait
 {
     private function generateCode($request, $additionalRequest)
     {
