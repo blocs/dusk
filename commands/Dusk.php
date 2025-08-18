@@ -134,14 +134,13 @@ class Dusk extends Command
                         $action = 'execute';
                     } else {
                         // generate
-                        list($result, $comment['script']) = $this->generateCode($request, $additionalRequest);
-                        $this->currentScript = $comment['script'];
+                        $newCode = $this->guessCode($request, $additionalRequest);
 
-                        if (false === $result) {
-                            $comment['script'] = $this->addIndent($comment['script'], '// ')."\n";
+                        if (false === $newCode) {
                             $action = $this->anticipate(trim($comment['script'])."\n", ['skip', 'quit'], 'skip');
                         } else {
-                            $comment['script'] = $this->addIndent($comment['script'])."\n";
+                            $this->currentScript = $newCode;
+                            $comment['script'] = $this->addIndent($newCode)."\n";
                             $action = $this->anticipate(trim($comment['script'])."\n", ['execute', 'skip', 'quit'], 'execute');
                         }
                     }
