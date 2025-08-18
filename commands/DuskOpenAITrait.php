@@ -26,18 +26,15 @@ trait DuskOpenAITrait
             'type' => 'text',
             'text' => file_get_contents(base_path('tests/Browser/blocs/assistant.md')),
         ];
-        $assistantContent[] = [
-            'type' => 'text',
-            'text' => file_get_contents(base_path('tests/Browser/blocs/sample.md'))."\n\n",
-        ];
+
         if (0 === strpos($url, 'http://') || 0 === strpos($url, 'https:')) {
             $this->browser->storeSource('blocs');
             $htmlContent = file_get_contents(base_path('tests/Browser/source/blocs.txt'));
-            $htmlContent = $this->minifyHtml($htmlContent);
+            // $htmlContent = $this->minifyHtml($htmlContent);
 
             $assistantContent[] = [
                 'type' => 'text',
-                'text' => "# HTML\n```html\n".$htmlContent."\n```\n\n",
+                'text' => "# 現在表示されているページの HTML\n```html\n".$htmlContent."\n```",
             ];
 
             unlink(base_path('tests/Browser/source/blocs.txt'));
@@ -46,23 +43,23 @@ trait DuskOpenAITrait
         $userContent = [];
         $userContent[] = [
             'type' => 'text',
-            'text' => file_get_contents(base_path('tests/Browser/blocs/user.md'))."\n\n",
+            'text' => file_get_contents(base_path('tests/Browser/blocs/user.md')),
         ];
         $userContent[] = [
             'type' => 'text',
-            'text' => "# Request\n".$request."\n\n",
+            'text' => "# Request\n".$request,
         ];
         empty($additionalRequest) || $userContent[] = [
             'type' => 'text',
-            'text' => "# Additional Request\n".$additionalRequest."\n\n",
+            'text' => "# Additional Request\n".$additionalRequest,
         ];
         empty(trim($this->currentScript)) || $userContent[] = [
             'type' => 'text',
-            'text' => "# Current Code\n```php\n".$this->currentScript."\n```\n\n",
+            'text' => "# Current Code\n```php\n".$this->currentScript."\n```",
         ];
         empty($this->errorMessage) || $userContent[] = [
             'type' => 'text',
-            'text' => "# Error\n".$this->errorMessage."\n\n",
+            'text' => "# Error\n".$this->errorMessage,
         ];
 
         $message = [
@@ -87,10 +84,12 @@ trait DuskOpenAITrait
                 $model = config('openai.model');
             }
 
-            $result = OpenAI::chat()->create([
+            $chatOpenAI = [
                 'model' => $model,
                 'messages' => $message,
-            ]);
+            ];
+
+            $result = OpenAI::chat()->create($chatOpenAI);
         } catch (\Throwable $e) {
             $this->error($e->getMessage());
 
