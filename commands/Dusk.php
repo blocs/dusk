@@ -8,16 +8,31 @@ use Illuminate\Console\Command;
 
 class Dusk extends Command
 {
-    use DuskOpenAiTrait;
+    use DuskOpenAITrait;
     use DuskTestTrait;
 
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
     protected $signature = 'blocs:dusk {script?}';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
     protected $description = 'Support laravel dusk browser tests';
+
     private $browser;
     private $indent;
     private $errorMessage;
     private $currentScript;
 
+    /**
+     * Execute the console command.
+     */
     public function handle()
     {
         $this->install();
