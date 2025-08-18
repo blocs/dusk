@@ -6,42 +6,8 @@ use OpenAI\Laravel\Facades\OpenAI;
 
 trait DuskOpenAITrait
 {
-    private function generateCode($request, $additionalRequest)
+    private function guessCode($request, $additionalRequest)
     {
-        $messageContent = [
-            [
-                'type' => 'text',
-                'text' => file_get_contents(base_path('tests/Browser/blocs/user.md'))."\n\n",
-            ],
-            [
-                'type' => 'text',
-                'text' => "# Request\n".$request."\n\n",
-            ],
-        ];
-        if (!empty($additionalRequest)) {
-            $messageContent[] = [
-                'type' => 'text',
-                'text' => "# Additional request\n".$additionalRequest."\n\n",
-            ];
-        }
-        if (!empty(trim($this->currentScript))) {
-            $messageContent[] = [
-                'type' => 'text',
-                'text' => "# Current code\n```php\n".$this->currentScript."\n```\n\n",
-            ];
-        }
-        if (!empty($this->errorMessage)) {
-            $messageContent[] = [
-                'type' => 'text',
-                'text' => "# Error\n".$this->errorMessage."\n\n",
-            ];
-        }
-
-        $messageContent[] = [
-            'type' => 'text',
-            'text' => file_get_contents(base_path('tests/Browser/blocs/sample.md'))."\n\n",
-        ];
-
         try {
             $url = $this->browser->driver->getCurrentURL();
         } catch (NoSuchWindowException $e) {
@@ -49,12 +15,27 @@ trait DuskOpenAITrait
             exit;
         }
 
+        $systemContent = [];
+        $systemContent[] = [
+            'type' => 'text',
+            'text' => file_get_contents(base_path('tests/Browser/blocs/system.md')),
+        ];
+
+        $assistantContent = [];
+        $assistantContent[] = [
+            'type' => 'text',
+            'text' => file_get_contents(base_path('tests/Browser/blocs/assistant.md')),
+        ];
+        $assistantContent[] = [
+            'type' => 'text',
+            'text' => file_get_contents(base_path('tests/Browser/blocs/sample.md'))."\n\n",
+        ];
         if (0 === strpos($url, 'http://') || 0 === strpos($url, 'https:')) {
             $this->browser->storeSource('blocs');
             $htmlContent = file_get_contents(base_path('tests/Browser/source/blocs.txt'));
             $htmlContent = $this->minifyHtml($htmlContent);
 
-            $messageContent[] = [
+            $assistantContent[] = [
                 'type' => 'text',
                 'text' => "# HTML\n```html\n".$htmlContent."\n```\n\n",
             ];
@@ -62,43 +43,53 @@ trait DuskOpenAITrait
             unlink(base_path('tests/Browser/source/blocs.txt'));
         }
 
+        $userContent = [];
+        $userContent[] = [
+            'type' => 'text',
+            'text' => file_get_contents(base_path('tests/Browser/blocs/user.md'))."\n\n",
+        ];
+        $userContent[] = [
+            'type' => 'text',
+            'text' => "# Request\n".$request."\n\n",
+        ];
+        empty($additionalRequest) || $userContent[] = [
+            'type' => 'text',
+            'text' => "# Additional Request\n".$additionalRequest."\n\n",
+        ];
+        empty(trim($this->currentScript)) || $userContent[] = [
+            'type' => 'text',
+            'text' => "# Current Code\n```php\n".$this->currentScript."\n```\n\n",
+        ];
+        empty($this->errorMessage) || $userContent[] = [
+            'type' => 'text',
+            'text' => "# Error\n".$this->errorMessage."\n\n",
+        ];
+
+        $message = [
+            [
+                'role' => 'system',
+                'content' => $systemContent,
+            ],
+            [
+                'role' => 'assistant',
+                'content' => $assistantContent,
+            ],
+            [
+                'role' => 'user',
+                'content' => $userContent,
+            ],
+        ];
+
         try {
             if (empty(config('openai.model'))) {
-                if (empty($additionalRequest)) {
-                    $model = 'gpt-5-mini';
-                } else {
-                    $model = 'gpt-5';
-                }
+                $model = empty($additionalRequest) ? 'gpt-5-mini' : 'gpt-5';
             } else {
                 $model = config('openai.model');
             }
 
             $result = OpenAI::chat()->create([
                 'model' => $model,
-                'messages' => [
-                    [
-                        'role' => 'system',
-                        'content' => [
-                            [
-                                'type' => 'text',
-                                'text' => file_get_contents(base_path('tests/Browser/blocs/system.md')),
-                            ],
-                        ],
-                    ],
-                    [
-                        'role' => 'user',
-                        'content' => $messageContent,
-                    ],
-                    [
-                        'role' => 'assistant',
-                        'content' => [
-                            [
-                                'type' => 'text',
-                                'text' => file_get_contents(base_path('tests/Browser/blocs/assistant.md')),
-                            ],
-                        ],
-                    ],
-                ],
+                'messages' => $message,
             ]);
         } catch (\Throwable $e) {
             $this->error($e->getMessage());
@@ -108,13 +99,12 @@ trait DuskOpenAITrait
 
         // Get updated function
         $scriptContent = $result->choices[0]->message->content;
-        $result = strpos($scriptContent, '```php');
 
         $scriptContent = str_replace('```php', '', $scriptContent);
         $scriptContent = str_replace('```', '', $scriptContent);
         $scriptContent = trim($scriptContent);
 
-        return [$result, $scriptContent];
+        return $scriptContent;
     }
 
     private function minifyHtml($htmlContent)
