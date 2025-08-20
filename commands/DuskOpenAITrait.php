@@ -6,7 +6,7 @@ use OpenAI\Laravel\Facades\OpenAI;
 
 trait DuskOpenAITrait
 {
-    private function guessCode($request, $additionalRequest)
+    private function guessCode($request, $additionalRequest, $currentScript)
     {
         try {
             $url = $this->browser->driver->getCurrentURL();
@@ -28,16 +28,15 @@ trait DuskOpenAITrait
         ];
 
         if (0 === strpos($url, 'http://') || 0 === strpos($url, 'https:')) {
-            $this->browser->storeSource('blocs');
-            $htmlContent = file_get_contents(base_path('tests/Browser/source/blocs.txt'));
-            // $htmlContent = $this->minifyHtml($htmlContent);
+            $this->browser->storeSource('blocsDusk');
+            $htmlContent = file_get_contents(base_path('tests/Browser/source/blocsDusk.txt'));
 
             $assistantContent[] = [
                 'type' => 'text',
                 'text' => "# 現在表示されているページの HTML\n```html\n".$htmlContent."\n```",
             ];
 
-            unlink(base_path('tests/Browser/source/blocs.txt'));
+            unlink(base_path('tests/Browser/source/blocsDusk.txt'));
         }
 
         $userContent = [];
@@ -53,9 +52,9 @@ trait DuskOpenAITrait
             'type' => 'text',
             'text' => "# Additional Request\n".$additionalRequest,
         ];
-        empty(trim($this->currentScript)) || $userContent[] = [
+        empty(trim($currentScript)) || $userContent[] = [
             'type' => 'text',
-            'text' => "# Current Code\n```php\n".$this->currentScript."\n```",
+            'text' => "# Current Code\n```php\n".$currentScript."\n```",
         ];
         empty($this->errorMessage) || $userContent[] = [
             'type' => 'text',
@@ -79,7 +78,7 @@ trait DuskOpenAITrait
 
         try {
             if (empty(config('openai.model'))) {
-                $model = empty($additionalRequest) ? 'gpt-5-mini' : 'gpt-5';
+                $model = empty($currentScript) ? 'gpt-5-mini' : 'gpt-5';
             } else {
                 $model = config('openai.model');
             }
@@ -104,46 +103,5 @@ trait DuskOpenAITrait
         $scriptContent = trim($scriptContent);
 
         return $scriptContent;
-    }
-
-    private function minifyHtml($htmlContent)
-    {
-        // Remove spaces
-        $htmlContent = str_replace(["\r\n", "\r", "\n"], ' ', $htmlContent);
-        $htmlContent = preg_replace('/\s+/', ' ', $htmlContent);
-
-        // Remove comment tags
-        $htmlContent = preg_replace('/<!--.*?-->/', '', $htmlContent);
-
-        // Remove tags
-        foreach (['head', 'script', 'style', 'pre', 'path', 'svg'] as $tag) {
-            $htmlList = preg_split('/<\s*'.$tag.'/i', $htmlContent);
-            $htmlContent = array_shift($htmlList);
-            foreach ($htmlList as $html) {
-                $html = preg_split('/<\s*\/\s*'.$tag.'\s*>/i', $html, 2);
-                if (count($html) > 1) {
-                    $htmlContent .= $html[1];
-                } else {
-                    $htmlContent .= $html[0];
-                }
-            }
-        }
-
-        // Remove attributes
-        preg_match_all('/\s*([a-zA-Z\-]+)\s*=\s*("|\').*?\2/', $htmlContent, $matchs);
-        $attributes = array_unique($matchs[1]);
-
-        foreach ($attributes as $attribute) {
-            if (in_array($attribute, ['href', 'id', 'class', 'name'])) {
-                continue;
-            }
-
-            $htmlContent = preg_replace('/\s*'.$attribute.'\s*=\s*("|\').*?\1/', '', $htmlContent);
-        }
-
-        // Remove multibite characters
-        $htmlContent = preg_replace('/[^\x20-\x7E]{10,}/u', '', $htmlContent);
-
-        return $htmlContent;
     }
 }

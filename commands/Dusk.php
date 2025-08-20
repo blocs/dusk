@@ -28,7 +28,6 @@ class Dusk extends Command
     private $browser;
     private $indent;
     private $errorMessage;
-    private $currentScript;
 
     /**
      * Execute the console command.
@@ -54,7 +53,7 @@ class Dusk extends Command
             $originalScript = file_get_contents($script);
 
             $functions = [];
-            preg_match_all('/\s*function\s*(.*?)\(/', $originalScript, $functions);
+            preg_match_all('/private\s+function\s+(.*?)\(/', $originalScript, $functions);
 
             // Choose action
             $actions = ['run'];
@@ -92,61 +91,56 @@ class Dusk extends Command
                 continue;
             }
 
-            // Open browser
-            $this->openBrowser();
+            // ブラウザを開く
+            if (empty($this->browser)) {
+                $this->openBrowser();
+            } else {
+                try {
+                    // ブラウザの状態を確認
+                    $this->browser->driver->getCurrentURL();
+                } catch (NoSuchWindowException $e) {
+                    $this->openBrowser();
+                }
+            }
 
             $commentNum = 0;
-            while (1) {
+            while (count($comments) > $commentNum) {
                 // Get comment
                 list($buff, $buff, $comments) = $this->getComment($script, $function);
+                $comment = $comments[$commentNum];
 
-                if (count($comments) > $commentNum) {
-                    $comment = $comments[$commentNum];
-                } else {
-                    if (!config('openai.api_key')) {
-                        break;
-                    }
+                if (empty($comment['comment'])) {
+                    $this->line(trim($comment['script']));
+                    eval($comment['script']);
 
-                    // Add step
-                    $action = $this->anticipate('Add step', ['quit']);
-
-                    // quit
-                    if ('quit' === strtolower($action) || 'exit' === strtolower($action) || 'bye' === strtolower($action)) {
-                        break;
-                    }
-
-                    $comment = [
-                        'comment' => $this->addIndent($action, '// '),
-                        'script' => '',
-                    ];
+                    ++$commentNum;
+                    continue;
                 }
+
                 $additionalRequest = '';
-
-                $this->currentScript = $comment['script'];
-
                 while (1) {
                     list($this->indent, $request) = explode('//', $comment['comment'], 2);
                     $request = trim($request);
 
                     $this->line(trim($comment['comment']));
+                    empty(trim($comment['script'])) || $this->line($comment['script']);
 
-                    if (!empty(trim($comment['script']))) {
-                        $action = 'execute';
-                    } else {
-                        // generate
-                        $newCode = $this->guessCode($request, $additionalRequest);
-
+                    if ($this->confirm('Generate Code ?', false)) {
+                        // コード生成
+                        $newCode = $this->guessCode($request, $additionalRequest, $comment['script']);
                         if (false === $newCode) {
-                            $action = $this->anticipate(trim($comment['script'])."\n", ['skip', 'quit'], 'skip');
-                        } else {
-                            $this->currentScript = $newCode;
-                            $comment['script'] = $this->addIndent($newCode)."\n";
-                            $action = $this->anticipate(trim($comment['script'])."\n", ['execute', 'skip', 'quit'], 'execute');
+                            $this->error('Can not generate code');
+                            break;
                         }
+
+                        $comment['script'] = $this->addIndent($newCode)."\n";
                     }
+
+                    $action = $this->anticipate(trim($comment['script'])."\n", ['execute', 'update', 'skip', 'quit'], 'execute');
 
                     // execute
                     if ('execute' === strtolower($action)) {
+                        // 実行
                         $browser = $this->browser;
                         $this->errorMessage = '';
 
@@ -156,37 +150,35 @@ class Dusk extends Command
                             $this->updateScript($script, $function, $commentNum, $comment);
                             break;
                         } catch (NoSuchWindowException $e) {
-                            $browser->quit();
                             $this->error('Browser closed');
                             exit;
                         } catch (InvalidSessionIdException $e) {
-                            $browser->quit();
                             $this->error('Browser closed');
                             exit;
-                        } catch (\BadMethodCallException $e) {
-                            $this->info('skip');
-                            break;
                         } catch (\Throwable $e) {
                             // Error happend
                             $this->error($e->getMessage());
                             $this->errorMessage = $e->getMessage();
-
-                            $action = $this->anticipate(trim($comment['script'])."\n", ['retry', 'skip', 'quit']);
-
-                            // retry
-                            if ('retry' === strtolower($action)) {
-                                continue;
-                            }
+                            continue;
                         }
+                    }
+
+                    // update
+                    if ('update' === strtolower($action)) {
+                        // 実行せずに更新
+                        $this->updateScript($script, $function, $commentNum, $comment);
+                        break;
                     }
 
                     // skip
                     if ('skip' === strtolower($action)) {
+                        // 実行も更新もなし
                         break;
                     }
 
                     // quit
                     if ('quit' === strtolower($action) || 'exit' === strtolower($action) || 'bye' === strtolower($action)) {
+                        // 終了
                         break 2;
                     }
 
@@ -196,8 +188,6 @@ class Dusk extends Command
                 }
                 ++$commentNum;
             }
-
-            isset($this->browser) && $this->browser->quit();
         }
     }
 
@@ -220,10 +210,10 @@ class Dusk extends Command
 
         $flag = false;
         foreach ($scriptContent as $num => $line) {
-            if ($flag && (preg_match('/public\s+function\s+/', $line) || count($scriptContent) <= $num + 1)) {
+            if ($flag && (preg_match('/private\s+function\s+/', $line) || count($scriptContent) <= $num + 1)) {
                 $flag = false;
             }
-            if (preg_match('/public\s+function\s+'.$function.'\(/', $line)) {
+            if (preg_match('/private\s+function\s+'.$function.'\(/', $line)) {
                 $flag = true;
             }
 
@@ -255,8 +245,13 @@ class Dusk extends Command
         $funstionContents = explode("\n", $functionContent);
         strlen(last($funstionContents)) || array_pop($funstionContents);
 
+        $comments = [];
+        $scriptFlag = false;
+
         $beforeComment = '';
         while ($funstionContents) {
+            list($scriptFlag, $comments) = $this->checkScriptContent($scriptFlag, $comments, $funstionContents[0]);
+
             if (preg_match('/^\s*\/\/\s*/', $funstionContents[0])) {
                 break;
             }
@@ -275,7 +270,6 @@ class Dusk extends Command
             ++$num;
         }
 
-        $comments = [];
         foreach ($funstionContents as $funstionContent) {
             if (preg_match('/^\s*\/\/\s*/', $funstionContent)) {
                 $comments[] = [
@@ -295,6 +289,21 @@ class Dusk extends Command
         return [$beforeFunction, $beforeComment, $comments, $afterComment, $afterFunction];
     }
 
+    private function checkScriptContent($scriptFlag, $comments, $funstionContent)
+    {
+        if (preg_match('/^\s*\/\*/', $funstionContent)) {
+            $scriptFlag = true;
+        } elseif (preg_match('/\*\/\s*$/', $funstionContent)) {
+            $scriptFlag = false;
+        } elseif ($scriptFlag) {
+            $comments[] = [
+                'script' => $funstionContent,
+            ];
+        }
+
+        return [$scriptFlag, $comments];
+    }
+
     private function updateScript($script, $function, $commentNum, $comment)
     {
         list($beforeFunction, $beforeComment, $comments, $afterComment, $afterFunction) = $this->getComment($script, $function);
@@ -302,6 +311,10 @@ class Dusk extends Command
 
         $updatedScript = '';
         foreach ($comments as $comment) {
+            if (empty($comment['comment'])) {
+                continue;
+            }
+
             empty($comment['comment']) || $updatedScript .= $comment['comment'];
             empty($comment['script']) || $updatedScript .= $comment['script'];
         }
