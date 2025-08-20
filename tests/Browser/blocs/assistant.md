@@ -23,7 +23,7 @@
 
 ## Dropzone に logo.png アップロードする
 ```php
-            $browser->attach('input.dz-hidden-input', storage_path('logo.png'));
+            $browser->attach('input.dz-hidden-input', base_path('tests/Browser/logo.png'));
 ```
 
 ## アバター画像までスクロールして、アバター画像をクリックする
