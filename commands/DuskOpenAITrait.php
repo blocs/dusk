@@ -30,6 +30,7 @@ trait DuskOpenAITrait
         if (0 === strpos($url, 'http://') || 0 === strpos($url, 'https:')) {
             $this->browser->storeSource('blocsDusk');
             $htmlContent = file_get_contents(base_path('tests/Browser/source/blocsDusk.txt'));
+            $htmlContent = $this->minifyHtml($htmlContent);
 
             $assistantContent[] = [
                 'type' => 'text',
@@ -103,5 +104,34 @@ trait DuskOpenAITrait
         $scriptContent = trim($scriptContent);
 
         return $scriptContent;
+    }
+
+    private function minifyHtml($htmlContent)
+    {
+        // Remove spaces
+        $htmlContent = str_replace(["\r\n", "\r", "\n"], ' ', $htmlContent);
+        $htmlContent = preg_replace('/\s+/', ' ', $htmlContent);
+
+        // Remove comment tags
+        $htmlContent = preg_replace('/<!--.*?-->/', '', $htmlContent);
+
+        // Remove tags
+        foreach (['head', 'script', 'style', 'pre', 'path', 'svg'] as $tag) {
+            $htmlList = preg_split('/<\s*'.$tag.'/i', $htmlContent);
+            $htmlContent = array_shift($htmlList);
+            foreach ($htmlList as $html) {
+                $html = preg_split('/<\s*\/\s*'.$tag.'\s*>/i', $html, 2);
+                if (count($html) > 1) {
+                    $htmlContent .= $html[1];
+                } else {
+                    $htmlContent .= $html[0];
+                }
+            }
+        }
+
+        // Remove multibite characters
+        $htmlContent = preg_replace('/[^\x20-\x7E]{20,}/u', '', $htmlContent);
+
+        return $htmlContent;
     }
 }
