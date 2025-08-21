@@ -255,9 +255,10 @@ class Dusk extends Command
         }
 
         $num = 0;
+        $numMax = substr_count($beforeComment, '{');
         $afterComment = '';
         while ($funstionContents) {
-            if (preg_match('/[^\s\}\)\;]/', last($funstionContents)) || $num > 1) {
+            if (preg_match('/[^\s\}]/', last($funstionContents)) || $num > $numMax) {
                 break;
             }
 
