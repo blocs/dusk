@@ -322,7 +322,7 @@ class Dusk extends Command
     private function install()
     {
         // Publish
-        file_exists(base_path('tests/Browser/blocs')) || \Artisan::call('vendor:publish', ['--provider' => 'Blocs\DuskServiceProvider']);
+        file_exists(base_path('tests/Browser/prompt')) || \Artisan::call('vendor:publish', ['--provider' => 'Blocs\DuskServiceProvider']);
 
         // Install laravel/dusk
         if (!file_exists(base_path('tests/DuskTestCase.php'))) {
