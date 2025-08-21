@@ -15,8 +15,6 @@ class DuskServiceProvider extends ViewServiceProvider
         $this->commands('command.blocs.dusk');
 
         // Publish
-        $this->publishes([
-            __DIR__.'/../tests/Browser/blocs' => base_path('tests/Browser/blocs'),
-        ]);
+        $this->publishes([base_path('vendor/blocs/dusk/tests') => base_path('tests')]);
     }
 }
