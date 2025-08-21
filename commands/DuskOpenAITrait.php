@@ -18,13 +18,13 @@ trait DuskOpenAITrait
         $systemContent = [];
         $systemContent[] = [
             'type' => 'text',
-            'text' => file_get_contents(base_path('tests/Browser/blocs/system.md')),
+            'text' => file_get_contents(base_path('tests/Browser/prompt/system.md')),
         ];
 
         $assistantContent = [];
         $assistantContent[] = [
             'type' => 'text',
-            'text' => file_get_contents(base_path('tests/Browser/blocs/assistant.md')),
+            'text' => file_get_contents(base_path('tests/Browser/prompt/assistant.md')),
         ];
 
         if (0 === strpos($url, 'http://') || 0 === strpos($url, 'https:')) {
@@ -43,7 +43,7 @@ trait DuskOpenAITrait
         $userContent = [];
         $userContent[] = [
             'type' => 'text',
-            'text' => file_get_contents(base_path('tests/Browser/blocs/user.md')),
+            'text' => file_get_contents(base_path('tests/Browser/prompt/user.md')),
         ];
         $userContent[] = [
             'type' => 'text',
