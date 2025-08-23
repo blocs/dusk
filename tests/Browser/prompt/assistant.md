@@ -1,36 +1,32 @@
 # サンプルコード
-## サイドメニューのユーザー管理が非表示の時は、サイドメニューの管理トップをクリックしてからユーザー管理を開く
+## サイドメニューにユーザー管理が非表示の時は、管理トップをクリックした後に、ユーザー管理をクリックする
 ```php
-            try {
-                $browser->clickLink('ユーザー管理');
-            } catch (\Throwable $e) {
-                $browser->clickLink('管理トップ')->pause(200)->clickLink('ユーザー管理');
-            }
+        try {
+            $browser->clickLink('ユーザー管理')->pause(500);
+        } catch (\Throwable $e) {
+            $browser->clickLink('管理トップ')->pause(500)->clickLink('ユーザー管理')->pause(500);
+        }
 ```
 
-## 確認ボタンをクリックした後に、モーダル内の新規登録ボタンを押す
+## 確認ボタンをクリックして、モーダル内の新規登録ボタンをクリックする
 ```php
-            $browser->click('button[data-bs-target="#modalStore"]')
-                ->whenAvailable('#modalStore', function ($modal) {
-                    $modal->click('button[formaction="http://localhost/admin/user"]');
-                });
+        $browser->click('button[data-bs-target="#modalStore"]')->pause(500)
+            ->whenAvailable('#modalStore', function ($modal) {
+                $modal->click('button.btn.btn-primary')->pause(500);
+            });
 ```
 
-## ユーザーIDに適当なemailを入力する
+## ユーザーIDに $email, パスワードとパスワード（確認）に $password を入力する
 ```php
-            $browser->type('email', fake()->email());
+        $browser->type('email', $email)
+            ->type('password', $password)
+            ->type('repassword', $password);
 ```
 
-## Dropzone に logo.png アップロードする
+## 画面の一番下までスクロールして、Dropzone に base_path('tests/Browser/upload/logo.png') をアップロードする
 ```php
-            $browser->attach('input.dz-hidden-input', base_path('tests/Browser/logo.png'));
-```
-
-## アバター画像までスクロールして、アバター画像をクリックする
-```php
-            $browser->scrollIntoView('.avatar')
-                ->pause(1000)
-                ->click('.avatar');
+        $browser->scrollIntoView('footer')->pause(500)
+            ->attach('input.dz-hidden-input', base_path('tests/Browser/upload/logo.png'));
 ```
 
 ## 検索フィールドに 椎名林檎 と入力して、エンターする
