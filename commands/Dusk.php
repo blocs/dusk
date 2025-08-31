@@ -77,6 +77,12 @@ class Dusk extends Command
                 exit;
             }
 
+            // Switch script
+            if (file_exists($action)) {
+                $script = $action;
+                continue;
+            }
+
             // Target function
             $function = $action;
 
