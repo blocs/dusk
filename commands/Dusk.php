@@ -48,6 +48,7 @@ class Dusk extends Command
 
             return;
         }
+        $this->scripts[] = $script;
 
         while (1) {
             // Retrieve all functions from $script
@@ -133,7 +134,7 @@ class Dusk extends Command
                     $this->line(trim($comment['comment']));
                     empty(trim($comment['script'])) || $this->line($comment['script']);
 
-                    if ($this->confirm('Generate Code ?', false)) {
+                    if ($this->confirm('Generate Code ?', empty(trim($comment['script'])))) {
                         // コード生成
                         $newCode = $this->guessCode($request, $additionalRequest, $comment['script']);
                         if (false === $newCode) {
@@ -142,6 +143,11 @@ class Dusk extends Command
                         }
 
                         $comment['script'] = $this->addIndent($newCode)."\n";
+                    }
+
+                    // skip
+                    if (empty(trim($comment['script']))) {
+                        break;
                     }
 
                     $action = $this->anticipate(trim($comment['script'])."\n", ['execute', 'update', 'skip', 'quit'], 'execute');
