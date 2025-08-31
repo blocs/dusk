@@ -28,6 +28,7 @@ class Dusk extends Command
     private $browser;
     private $indent;
     private $errorMessage;
+    private $scripts = [];
 
     /**
      * Execute the console command.
@@ -62,6 +63,11 @@ class Dusk extends Command
                 $function = trim($function);
                 empty($function) || $actions[] = $function;
             }
+            foreach ($this->scripts as $targetScript) {
+                // Add scripts
+                $targetScript = trim($targetScript);
+                empty($targetScript) || $targetScript == $script || $actions[] = $targetScript;
+            }
             $actions[] = 'quit';
             $action = $this->anticipate('Command', $actions);
 
@@ -78,8 +84,9 @@ class Dusk extends Command
             }
 
             // Switch script
-            if (file_exists($action)) {
-                $script = $action;
+            if (file_exists(str_replace("'", '', $action))) {
+                $script = str_replace("'", '', $action);
+                $this->scripts[] = $script;
                 continue;
             }
 
