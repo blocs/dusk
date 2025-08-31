@@ -1,19 +1,45 @@
 # コードの生成
 - $browser は Laravel\Dusk\Browser クラスのインスタンスです
 - $browser にチェーンメソッドで処理を追加してコードを生成してください
+- JavaScript の使用を禁止します
 - 適当なテストデータを入力する時は、fake() を使ってください
 - click, clickLink, press の後には、必ず pause(500) を実行してください
-- formaction を使わないでください
+- formaction の使用を禁止します
 
-# コードの修正
-- Current Code が与えられた時は、Current Code と違うコードを提案してください
-- Error が与えられた時は、Error を解消できるように Current Code を修正してください
+# サンプルコード
+## サイドメニューにユーザー管理が非表示の時は、管理トップをクリックした後に、ユーザー管理をクリックする
+```php
+        try {
+            $browser->clickLink('ユーザー管理')->pause(500);
+        } catch (\Throwable $e) {
+            $browser->clickLink('管理トップ')->pause(500)->clickLink('ユーザー管理')->pause(500);
+        }
+```
 
-# 制約条件
-- JavaScript の使用を禁止します
-- Laravel Dusk のメソッドだけを使った、シンプルなコードを生成してください
+## 確認ボタンをクリックして、モーダル内の新規登録ボタンをクリックする
+```php
+        $browser->click('button[data-bs-target="#modalStore"]')->pause(500)
+            ->whenAvailable('#modalStore', function ($modal) {
+                $modal->click('button.btn.btn-primary')->pause(500);
+            });
+```
 
-# 出力形式
-- プログラム全体ではなく、Request を実行する部分のコードのみを返してください
-- 処理の補足説明は禁止します
-- コメントは禁止します
+## ユーザーIDに $email, パスワードとパスワード（確認）に $password を入力する
+```php
+        $browser->type('email', $email)
+            ->type('password', $password)
+            ->type('repassword', $password);
+```
+
+## 画面の一番下までスクロールして、Dropzone に base_path('tests/Browser/upload/logo.png') をアップロードする
+```php
+        $browser->scrollIntoView('footer')->pause(500)
+            ->attach('input.dz-hidden-input', base_path('tests/Browser/upload/logo.png'));
+```
+
+## 検索フィールドに 椎名林檎 と入力して、エンターする
+```php
+            $browser->type('input[name="search_query"]', '椎名林檎')
+                ->keys('input[name="search_query"]', \Facebook\WebDriver\WebDriverKeys::ENTER)
+                ->pause(1000);
+```
