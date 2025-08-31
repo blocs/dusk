@@ -79,7 +79,7 @@ trait DuskOpenAITrait
 
         try {
             if (empty(config('openai.model'))) {
-                $model = empty($currentScript) ? 'gpt-5-mini' : 'gpt-5';
+                $model = empty($currentScript) ? 'gpt-5-chat-latest' : 'gpt-5';
             } else {
                 $model = config('openai.model');
             }
