@@ -109,30 +109,103 @@ trait DuskOpenAITrait
 
     private function minifyHtml($htmlContent)
     {
-        // Remove spaces
-        $htmlContent = str_replace(["\r\n", "\r", "\n"], ' ', $htmlContent);
-        $htmlContent = preg_replace('/\s+/', ' ', $htmlContent);
+        libxml_use_internal_errors(true);
+        $dom = new \DOMDocument();
+        $dom->loadHTML($htmlContent);
 
-        // Remove comment tags
-        $htmlContent = preg_replace('/<!--.*?-->/', '', $htmlContent);
+        // コメントを削除
+        $xpath = new \DOMXPath($dom);
+        foreach ($xpath->query('//comment()') as $commentNode) {
+            if ($commentNode->parentNode) {
+                $commentNode->parentNode->removeChild($commentNode);
+            }
+        }
 
-        // Remove tags
-        foreach (['head', 'script', 'style', 'pre', 'path', 'svg'] as $tag) {
-            $htmlList = preg_split('/<\s*'.$tag.'/i', $htmlContent);
-            $htmlContent = array_shift($htmlList);
-            foreach ($htmlList as $html) {
-                $html = preg_split('/<\s*\/\s*'.$tag.'\s*>/i', $html, 2);
-                if (count($html) > 1) {
-                    $htmlContent .= $html[1];
+        // 指定タグをまとめて削除
+        $tagsToRemove = ['script', 'style', 'meta', 'pre', 'path', 'svg', 'noscript', 'iframe'];
+        foreach ($tagsToRemove as $tagName) {
+            while (true) {
+                $nodes = $dom->getElementsByTagName($tagName);
+                if (0 === $nodes->length) {
+                    break;
+                }
+                $node = $nodes->item(0);
+                if ($node && $node->parentNode) {
+                    $node->parentNode->removeChild($node);
                 } else {
-                    $htmlContent .= $html[0];
+                    break;
                 }
             }
         }
 
-        // Remove multibite characters
-        $htmlContent = preg_replace('/[^\x20-\x7E]{20,}/u', '', $htmlContent);
+        // <link rel="stylesheet"> や CSS用のlink要素を削除
+        $linkNodes = $dom->getElementsByTagName('link');
+        $nodesToRemove = [];
+        foreach ($linkNodes as $link) {
+            $rel = $link->getAttribute('rel');
+            $as = $link->getAttribute('as');
+            $type = $link->getAttribute('type');
+            $isStylesheetRel = 1 === preg_match('/(^|\s)stylesheet(\s|$)/i', $rel);
+            $isPreloadStyle = 1 === preg_match('/(^|\s)preload(\s|$)/i', $rel) && 0 === strcasecmp($as, 'style');
+            $isCssType = false !== stripos($type, 'css');
+            if ($isStylesheetRel || $isPreloadStyle || $isCssType) {
+                $nodesToRemove[] = $link;
+            }
+        }
+        foreach ($nodesToRemove as $node) {
+            if ($node->parentNode) {
+                $node->parentNode->removeChild($node);
+            }
+        }
 
-        return $htmlContent;
+        // on*属性（イベントハンドラ）を削除し、style属性・aria*も削除、javascript: URLを無効化
+        $allElements = $dom->getElementsByTagName('*');
+        foreach ($allElements as $element) {
+            if (!$element->hasAttributes()) {
+                continue;
+            }
+            $attributeNames = [];
+            foreach ($element->attributes as $attribute) {
+                $attributeNames[] = $attribute->name;
+            }
+            foreach ($attributeNames as $attributeName) {
+                $lowerName = strtolower($attributeName);
+                // style属性の削除
+                if ('style' === $lowerName) {
+                    $element->removeAttribute($attributeName);
+                    continue;
+                }
+                // aria- の属性を削除
+                if (0 === strpos($lowerName, 'aria-')) {
+                    $element->removeAttribute($attributeName);
+                    continue;
+                }
+                // on* イベント属性の削除
+                if (0 === stripos($attributeName, 'on')) {
+                    $element->removeAttribute($attributeName);
+                    continue;
+                }
+                // javascript: を無効化
+                if ('href' === $lowerName || 'src' === $lowerName || 'xlink:href' === $lowerName) {
+                    $value = $element->getAttribute($attributeName);
+                    if (1 === preg_match('/^\s*javascript\s*:/i', $value)) {
+                        $element->setAttribute($attributeName, '#');
+                    }
+                }
+            }
+        }
+
+        $sanitizedHtml = $dom->saveHTML();
+
+        // Remove spaces
+        $sanitizedHtml = str_replace(["\r\n", "\r", "\n"], ' ', $sanitizedHtml);
+        $sanitizedHtml = preg_replace('/\s+/', ' ', $sanitizedHtml);
+
+        // 30文字以上連続する日本語（ひらがな/カタカナ/漢字/半角カナ/記号）を削除
+        $sanitizedHtml = html_entity_decode($sanitizedHtml, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $sanitizedHtml = preg_replace('/[\x{3040}-\x{30FF}\x{3400}-\x{4DBF}\x{4E00}-\x{9FFF}\x{F900}-\x{FAFF}\x{FF66}-\x{FF9F}\x{3000}-\x{303F}]{30,}/u', '', $sanitizedHtml);
+        $sanitizedHtml = preg_replace('/[\x21-\x7E]{100,}/u', '', $sanitizedHtml);
+
+        return $sanitizedHtml;
     }
 }
