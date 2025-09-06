@@ -136,7 +136,7 @@ class Dusk extends Command
 
                     if ($this->confirm('Generate Code ?', empty(trim($comment['script'])))) {
                         // コード生成
-                        $newCode = $this->guessCode($request, $additionalRequest, $comment['script']);
+                        $newCode = $this->guessCode($request, $additionalRequest, $comment['script'], $commentNum, $comments);
                         if (false === $newCode) {
                             $this->error('Can not generate code');
                             break;
