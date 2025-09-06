@@ -15,8 +15,8 @@ trait DuskOpenAITrait
             exit;
         }
 
-        $message = [];
-        $message[] = [
+        $messages = [];
+        $messages[] = [
             'role' => 'developer',
             'content' => file_get_contents(base_path('tests/Browser/prompt/developer.md')),
         ];
@@ -29,11 +29,11 @@ trait DuskOpenAITrait
                 continue;
             }
 
-            $message[] = [
+            $messages[] = [
                 'role' => 'user',
                 'content' => $comment['comment'],
             ];
-            $message[] = [
+            $messages[] = [
                 'role' => 'assistant',
                 'content' => $comment['script'],
             ];
@@ -73,7 +73,7 @@ trait DuskOpenAITrait
             'text' => file_get_contents(base_path('tests/Browser/prompt/user.md')),
         ];
 
-        $message[] = [
+        $messages[] = [
             'role' => 'user',
             'content' => $userContent,
         ];
@@ -87,7 +87,7 @@ trait DuskOpenAITrait
 
             $chatOpenAI = [
                 'model' => $model,
-                'messages' => $message,
+                'messages' => $messages,
             ];
 
             $result = OpenAI::chat()->create($chatOpenAI);
