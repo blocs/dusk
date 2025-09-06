@@ -21,6 +21,24 @@ trait DuskOpenAITrait
             'content' => file_get_contents(base_path('tests/Browser/prompt/developer.md')),
         ];
 
+        $sample = file_get_contents(base_path('tests/Browser/prompt/sample.txt'));
+        $samples = explode('//', $sample);
+        foreach ($samples as $sample) {
+            list($comment, $script) = explode("\n", $sample, 2);
+            if (empty(trim($comment)) || empty(trim($script))) {
+                continue;
+            }
+
+            $messages[] = [
+                'role' => 'user',
+                'content' => '// '.trim($comment),
+            ];
+            $messages[] = [
+                'role' => 'assistant',
+                'content' => trim($script),
+            ];
+        }
+
         foreach ($comments as $num => $comment) {
             if ($num >= $commentNum) {
                 break;
