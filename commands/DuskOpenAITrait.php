@@ -6,7 +6,7 @@ use OpenAI\Laravel\Facades\OpenAI;
 
 trait DuskOpenAITrait
 {
-    private function guessCode($request, $additionalRequest, $currentCode)
+    private function guessCode($request, $additionalRequest, $currentCode, $commentNum, $comments)
     {
         try {
             $url = $this->browser->driver->getCurrentURL();
@@ -15,17 +15,31 @@ trait DuskOpenAITrait
             exit;
         }
 
-        $developerContent = [];
-        $developerContent[] = [
-            'type' => 'text',
-            'text' => file_get_contents(base_path('tests/Browser/prompt/developer.md')),
+        $message = [];
+        $message[] = [
+            'role' => 'developer',
+            'content' => file_get_contents(base_path('tests/Browser/prompt/developer.md')),
         ];
 
+        foreach ($comments as $num => $comment) {
+            if ($num >= $commentNum) {
+                break;
+            }
+            if (empty($comment['comment']) || empty($comment['script'])) {
+                continue;
+            }
+
+            $message[] = [
+                'role' => 'user',
+                'content' => $comment['comment'],
+            ];
+            $message[] = [
+                'role' => 'assistant',
+                'content' => $comment['script'],
+            ];
+        }
+
         $userContent = [];
-        $userContent[] = [
-            'type' => 'text',
-            'text' => file_get_contents(base_path('tests/Browser/prompt/user.md')),
-        ];
         $userContent[] = [
             'type' => 'text',
             'text' => "# Request\n".$request,
@@ -46,31 +60,22 @@ trait DuskOpenAITrait
 
             unlink(base_path('tests/Browser/source/blocsDusk.txt'));
         }
-
-        $message = [
-            [
-                'role' => 'developer',
-                'content' => $developerContent,
-            ],
-            [
-                'role' => 'user',
-                'content' => $userContent,
-            ],
-        ];
-
-        $assistantContent = [];
-        empty(trim($currentCode)) || $assistantContent[] = [
+        empty(trim($currentCode)) || $userContent[] = [
             'type' => 'text',
             'text' => "# Current Code\n```php\n".$currentCode."\n```",
         ];
-        empty($this->errorMessage) || $assistantContent[] = [
+        empty($this->errorMessage) || $userContent[] = [
             'type' => 'text',
             'text' => "# Error\n".$this->errorMessage,
         ];
+        $userContent[] = [
+            'type' => 'text',
+            'text' => file_get_contents(base_path('tests/Browser/prompt/user.md')),
+        ];
 
-        $assistantContent && $message[] = [
-            'role' => 'assistant',
-            'content' => $assistantContent,
+        $message[] = [
+            'role' => 'user',
+            'content' => $userContent,
         ];
 
         try {
