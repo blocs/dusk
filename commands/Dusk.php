@@ -70,7 +70,7 @@ class Dusk extends Command
                 empty($targetScript) || $targetScript == $script || $actions[] = $targetScript;
             }
             $actions[] = 'quit';
-            $action = $this->anticipate('Command', $actions);
+            $action = $this->anticipate('Function', $actions);
 
             // run
             if ('run' === strtolower($action)) {
@@ -88,6 +88,10 @@ class Dusk extends Command
             if (file_exists(str_replace("'", '', $action))) {
                 $script = str_replace("'", '', $action);
                 $this->scripts[] = $script;
+                continue;
+            }
+
+            if (empty($action)) {
                 continue;
             }
 
@@ -119,7 +123,7 @@ class Dusk extends Command
                 $comment = $comments[$commentNum];
 
                 if (empty($comment['comment'])) {
-                    $this->line(trim($comment['script']));
+                    $this->infoScript($comment['script']);
                     eval($comment['script']);
 
                     ++$commentNum;
@@ -132,7 +136,7 @@ class Dusk extends Command
                     $request = trim($request);
 
                     $this->line(trim($comment['comment']));
-                    empty(trim($comment['script'])) || $this->line($comment['script']);
+                    empty(trim($comment['script'])) || $this->infoScript($comment['script']);
 
                     if ($this->confirm('Generate Code ?', empty(trim($comment['script'])))) {
                         // コード生成
@@ -143,14 +147,23 @@ class Dusk extends Command
                         }
 
                         $comment['script'] = $this->addIndent($newCode)."\n";
+                        $this->infoScript($comment['script']);
                     }
 
                     // skip
                     if (empty(trim($comment['script']))) {
+                        $action = $this->anticipate('Action', ['skip', 'quit'], 'skip');
+
+                        // quit
+                        if ('quit' === strtolower($action)) {
+                            // 終了
+                            break 2;
+                        }
+
                         break;
                     }
 
-                    $action = $this->anticipate(trim($comment['script'])."\n", ['execute', 'update', 'skip', 'quit'], 'execute');
+                    $action = $this->anticipate('Action', ['execute', 'update', 'skip', 'quit'], 'execute');
 
                     // execute
                     if ('execute' === strtolower($action)) {
@@ -205,14 +218,28 @@ class Dusk extends Command
         }
     }
 
-    private function addIndent($scriptContent, $preset = '')
+    private function addIndent($scriptContent)
     {
         $result = '';
         foreach (explode("\n", $scriptContent) as $line) {
-            $result .= $this->indent.$preset.$line."\n";
+            $result .= $this->indent.$line."\n";
         }
 
         return $result;
+    }
+
+    private function infoScript($scriptContent)
+    {
+        $result = '';
+        foreach (explode("\n", $scriptContent) as $line) {
+            if (empty(trim($line))) {
+                continue;
+            }
+
+            $result .= substr($line, strlen($this->indent))."\n";
+        }
+
+        $this->info($result);
     }
 
     private function splitScript($scriptContent, $function)
@@ -227,7 +254,7 @@ class Dusk extends Command
             if ($flag && (preg_match('/private\s+function\s+/', $line) || count($scriptContent) <= $num + 1)) {
                 $flag = false;
             }
-            if (preg_match('/private\s+function\s+'.$function.'\(/', $line)) {
+            if (preg_match('/private\s+function\s+'.str_replace('/', '', $function).'\(/', $line)) {
                 $flag = true;
             }
 
@@ -346,14 +373,14 @@ class Dusk extends Command
 
         // Install laravel/dusk
         if (!file_exists(base_path('tests/DuskTestCase.php'))) {
-            $this->info('Please execute below command to install laravel/dusk');
+            $this->error('Please execute below command to install laravel/dusk');
             $this->line('php artisan dusk:install');
             exit;
         }
 
         // Install openai-php/laravel
         if (!file_exists(config_path('openai.php'))) {
-            $this->info('Please execute below command to install openai-php/laravel');
+            $this->error('Please execute below command to install openai-php/laravel');
             $this->line('php artisan openai:install');
             exit;
         }
