@@ -38,27 +38,23 @@ class Dusk extends Command
         $this->install();
 
         $script = $this->argument('script');
-        if (empty($script)) {
-            exit;
+        if (file_exists($script)) {
+            $this->scripts[] = $script;
         }
-
-        file_exists($script) || $script = base_path($script);
-        if (!file_exists($script)) {
-            $this->error('Script not found');
-
-            return;
-        }
-        $this->scripts[] = $script;
 
         while (1) {
             // Retrieve all functions from $script
-            $originalScript = file_get_contents($script);
+            if (file_exists($script)) {
+                $originalScript = file_get_contents($script);
+            } else {
+                $originalScript = '';
+            }
 
             $functions = [];
             preg_match_all('/private\s+function\s+(.*?)\(/', $originalScript, $functions);
 
             // Choose action
-            $actions = ['run'];
+            $actions = [];
             foreach ($functions[1] as $function) {
                 // Add functions
                 $function = trim($function);
@@ -71,12 +67,6 @@ class Dusk extends Command
             }
             $actions[] = 'quit';
             $action = $this->anticipate('Function', $actions);
-
-            // run
-            if ('run' === strtolower($action)) {
-                \Artisan::call('dusk --browse '.$script);
-                continue;
-            }
 
             // quit
             if ('quit' === strtolower($action) || 'exit' === strtolower($action) || 'bye' === strtolower($action)) {
@@ -185,6 +175,8 @@ class Dusk extends Command
                         } catch (\Throwable $e) {
                             // Error happend
                             $this->error($e->getMessage());
+                            $this->newLine();
+
                             $this->errorMessage = $e->getMessage();
                             continue;
                         }
@@ -304,7 +296,7 @@ class Dusk extends Command
         $numMax = substr_count($beforeComment, '{');
         $afterComment = '';
         while ($funstionContents) {
-            if (preg_match('/[^\s\}]/', last($funstionContents)) || $num > $numMax) {
+            if (preg_match('/[^\s\}]/', last($funstionContents)) || $num >= $numMax) {
                 break;
             }
 
