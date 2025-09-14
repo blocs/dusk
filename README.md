@@ -15,7 +15,7 @@ Laravelのブラウザテストサポートツール
 生成AIで、Laravel Dusk のテストコード作成をサポートするツール
 
 # 導入方法
-本パッケージを使用する際、テスト対象の Laravel プロジェクトに直接インストールする必要はありません。テスト対象のプロジェクトがブラウザからアクセス可能な状態（開発サーバーやステージング環境として起動している状態）であれば、別途テスト専用の Laravel プロジェクトを用意し、そこからテストを実行することも可能です。
+本パッケージを使用する際、テスト対象の Laravel プロジェクトに直接インストールする必要はありません。テスト対象のプロジェクトがブラウザからアクセス可能な状態（開発サーバーやステージング環境として起動している状態）であれば、テスト用 Laravel プロジェクトを用意し、そこからテストを実行することも可能です。
 
 ※テストコードの生成には LLM の利用が必要なため、お持ちでない場合は、OpenAI_API キーを取得してください。
 
@@ -24,8 +24,7 @@ Laravelのブラウザテストサポートツール
 
 ## 1. テスト用 Laravel プロジェクト作成
 ```bash
-composer create-project laravel/laravel [プロジェクト名]
-例） composer create-project laravel/laravel dusk-web-test
+composer create-project laravel/laravel dusk-web-test
 ```
 
 ## 2. blocs/dusk をインストール
