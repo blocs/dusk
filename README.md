@@ -11,18 +11,18 @@ Laravelのブラウザテストサポートツール
 [![Laravel version](https://img.shields.io/badge/laravel-%3E%3D10-green)](https://github.com/blocs/dusk)
 [![PHP version](https://img.shields.io/badge/php-%3E%3D8.1-blue)](https://github.com/blocs/dusk)
 
-# 概要
+# 概要 | Overview
 生成AIで、Laravel Dusk のテストコード作成をサポートするツール
 
-# 導入方法
-本パッケージを使用する際、テスト対象の Laravel プロジェクトに直接インストールする必要はありません。テスト対象のプロジェクトがブラウザからアクセス可能な状態（開発サーバーやステージング環境として起動している状態）であれば、テスト用 Laravel プロジェクトを用意し、そこからテストを実行することも可能です。
+A tool that uses generative AI to assist in creating Laravel Dusk test code.
 
-※テストコードの生成には LLM の利用が必要なため、お持ちでない場合は、OpenAI_API キーを取得してください。
+本パッケージは、テスト対象の Laravel プロジェクトに直接インストールする必要はありません。テスト対象のプロジェクトがブラウザーからアクセス可能（開発サーバーまたはステージング環境で稼働）であれば、別途用意したテスト用の Laravel プロジェクトからテストを実行できます。
 
-[OPENAI_APIキーの取得方法](https://qiita.com/kurata04/items/a10bdc44cc0d1e62dad3)
+You do not need to install this package directly in the target Laravel project. If the target project is accessible via a browser (running on a development server or staging environment), you can set up a separate Laravel project for testing and execute the tests from there.
 
+# 導入方法 | Setup
 
-## 1. テスト用 Laravel プロジェクト作成
+## 1. テスト用の Laravel プロジェクト作成
 ```bash
 composer create-project laravel/laravel dusk-web-test
 ```
@@ -43,12 +43,14 @@ php artisan openai:install
 ```bash
 php artisan dusk
 ```
-※初回実行時にエラーが発生する場合があります。その場合は、再度実行してください。
+初回実行時にエラーが発生する場合があります。その場合は、再度実行してください。
 
 ## 5. envの設定
 ```bash
 OPENAI_API_KEY=your-api-key-here
 ```
+テストコードの生成には LLM の利用が必要なため、お持ちでない場合は、OpenAI_API キーを取得してください。  
+[OPENAI_APIキーの取得方法](https://qiita.com/kurata04/items/a10bdc44cc0d1e62dad3)
 
 # 使い方
 [Qiita:「Laravel Dusk × GPT-4o」でブラウザテストを超効率化！最強ツールを紹介します](https://qiita.com/yokoba/items/18adfeb0978a5155c11b)
