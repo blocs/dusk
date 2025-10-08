@@ -14,6 +14,12 @@ class DuskServiceProvider extends ViewServiceProvider
 
         $this->commands('command.blocs.dusk');
 
+        $this->app->singleton('command.openai.test', function ($app) {
+            return new Commands\OpenAITest();
+        });
+
+        $this->commands('command.openai.test');
+
         // Publish
         $this->publishes([base_path('vendor/blocs/dusk/tests') => base_path('tests')]);
     }
