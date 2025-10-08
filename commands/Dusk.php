@@ -37,6 +37,8 @@ class Dusk extends Command
     {
         $this->install();
 
+        file_exists(storage_path('framework/cache/chatOpenAI.log')) && unlink(storage_path('framework/cache/chatOpenAI.log'));
+
         $script = $this->argument('script');
         if (file_exists($script)) {
             $this->scripts[] = $script;
