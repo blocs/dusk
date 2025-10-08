@@ -15,27 +15,28 @@ trait DuskOpenAITrait
             exit;
         }
 
-        $messages = [];
-        $messages[] = [
-            'role' => 'developer',
-            'content' => file_get_contents(base_path('tests/Browser/prompt/developer.md')),
+        $messages = [
+            [
+                'role' => 'developer',
+                'content' => file_get_contents(base_path('tests/Browser/prompt/developer.md')),
+            ],
         ];
 
         foreach ($comments as $num => $comment) {
             if ($num >= $commentNum) {
                 break;
             }
-            if (empty($comment['comment']) || empty($comment['script'])) {
+            if (empty(trim($comment['comment'])) || empty(trim($comment['script']))) {
                 continue;
             }
 
             $messages[] = [
                 'role' => 'user',
-                'content' => $comment['comment'],
+                'content' => trim($comment['comment']),
             ];
             $messages[] = [
                 'role' => 'assistant',
-                'content' => $comment['script'],
+                'content' => trim($comment['script']),
             ];
         }
 
@@ -47,6 +48,18 @@ trait DuskOpenAITrait
         empty($additionalRequest) || $userContent[] = [
             'type' => 'text',
             'text' => "# Additional Request\n".$additionalRequest,
+        ];
+        $userContent[] = [
+            'type' => 'text',
+            'text' => file_get_contents(base_path('tests/Browser/prompt/user.md')),
+        ];
+        empty(trim($currentCode)) || $userContent[] = [
+            'type' => 'text',
+            'text' => "# Current Code\n```php\n".$currentCode."\n```",
+        ];
+        empty($this->errorMessage) || $userContent[] = [
+            'type' => 'text',
+            'text' => "# Error\n".$this->errorMessage,
         ];
         if (0 === strpos($url, 'http://') || 0 === strpos($url, 'https:')) {
             $this->browser->storeSource('blocsDusk');
@@ -60,18 +73,6 @@ trait DuskOpenAITrait
 
             unlink(base_path('tests/Browser/source/blocsDusk.txt'));
         }
-        empty(trim($currentCode)) || $userContent[] = [
-            'type' => 'text',
-            'text' => "# Current Code\n```php\n".$currentCode."\n```",
-        ];
-        empty($this->errorMessage) || $userContent[] = [
-            'type' => 'text',
-            'text' => "# Error\n".$this->errorMessage,
-        ];
-        $userContent[] = [
-            'type' => 'text',
-            'text' => file_get_contents(base_path('tests/Browser/prompt/user.md')),
-        ];
 
         $messages[] = [
             'role' => 'user',
@@ -89,6 +90,7 @@ trait DuskOpenAITrait
                 'model' => $model,
                 'messages' => $messages,
             ];
+            $this->storeLog($chatOpenAI);
 
             $result = OpenAI::chat()->create($chatOpenAI);
         } catch (\Throwable $e) {
@@ -207,5 +209,10 @@ trait DuskOpenAITrait
         $sanitizedHtml = preg_replace('/[\x21-\x7E]{100,}/u', '', $sanitizedHtml);
 
         return $sanitizedHtml;
+    }
+
+    private function storeLog($chatOpenAI)
+    {
+        file_put_contents(storage_path('framework/cache/chatOpenAI.log'), json_encode($chatOpenAI, JSON_UNESCAPED_UNICODE)."\n", FILE_APPEND);
     }
 }
