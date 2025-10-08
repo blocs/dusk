@@ -8,8 +8,8 @@ Laravelのブラウザテストサポートツール
 [![GitHub code size](https://img.shields.io/github/languages/code-size/blocs/dusk)](https://github.com/blocs/dusk)
 [![GitHub license](https://img.shields.io/github/license/blocs/dusk)](https://github.com/blocs/dusk)
 [![Laravel awesome](https://img.shields.io/badge/Awesome-Laravel-green)](https://github.com/blocs/dusk)
-[![Laravel version](https://img.shields.io/badge/laravel-%3E%3D10-green)](https://github.com/blocs/dusk)
-[![PHP version](https://img.shields.io/badge/php-%3E%3D8.1-blue)](https://github.com/blocs/dusk)
+[![Laravel version](https://img.shields.io/badge/laravel-%3E%3D11-green)](https://github.com/blocs/dusk)
+[![PHP version](https://img.shields.io/badge/php-%3E%3D8.3-blue)](https://github.com/blocs/dusk)
 
 # 概要 | Overview
 生成AIで、Laravel Dusk のテストコード作成をサポートするツール
