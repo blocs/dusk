@@ -4,7 +4,7 @@ namespace Blocs\Commands;
 
 use OpenAI\Laravel\Facades\OpenAI;
 
-trait DuskOpenAITrait
+trait OpenAITrait
 {
     private function guessCode($request, $additionalRequest, $currentCode, $commentNum, $comments)
     {

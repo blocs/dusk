@@ -8,8 +8,8 @@ use Illuminate\Console\Command;
 
 class Dusk extends Command
 {
-    use DuskOpenAITrait;
     use DuskTestTrait;
+    use OpenAITrait;
 
     /**
      * The name and signature of the console command.
