@@ -26,7 +26,7 @@ trait OpenAITrait
             if ($num >= $commentNum) {
                 break;
             }
-            if (empty(trim($comment['comment'])) || empty(trim($comment['script']))) {
+            if (empty($comment['comment']) || empty($comment['script'])) {
                 continue;
             }
 
