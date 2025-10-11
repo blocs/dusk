@@ -53,4 +53,4 @@ OPENAI_API_KEY=your-api-key-here
 [OPENAI_APIキーの取得方法](https://qiita.com/kurata04/items/a10bdc44cc0d1e62dad3)
 
 # 使い方
-[Qiita:「Laravel Dusk × GPT-4o」でブラウザテストを超効率化！最強ツールを紹介します](https://qiita.com/yokoba/items/18adfeb0978a5155c11b)
+[Qiita:もうテストで疲弊しない！生成AI × Laravel Duskでブラウザテストコードを自動生成してくれる話](https://qiita.com/yokoba/items/06eb5b61bdd8c602c95d)
