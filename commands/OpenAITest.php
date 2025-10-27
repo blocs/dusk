@@ -32,7 +32,7 @@ class OpenAITest extends Command
         $chatOpenAILog = explode("\n", file_get_contents(storage_path('framework/cache/chatOpenAI.log')));
         foreach ($chatOpenAILog as $chatOpenAI) {
             $chatOpenAI = json_decode($chatOpenAI, true);
-            if (!$chatOpenAI) {
+            if (! $chatOpenAI) {
                 continue;
             }
 
@@ -40,13 +40,13 @@ class OpenAITest extends Command
         }
         $repeat || dump($chatOpenAIs);
 
-        for ($i = 1; $i <= $repeat; ++$i) {
+        for ($i = 1; $i <= $repeat; $i++) {
             echo '## '.$i."\n";
             $this->testOpenAI($chatOpenAIs);
         }
     }
 
-    private function testOpenAI($chatOpenAIs)
+    private function test_open_ai($chatOpenAIs)
     {
         foreach ($chatOpenAIs as $chatOpenAI) {
             $time_start = microtime(true);

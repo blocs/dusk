@@ -26,8 +26,11 @@ class Dusk extends Command
     protected $description = 'Support laravel dusk browser tests';
 
     private $browser;
+
     private $indent;
+
     private $errorMessage;
+
     private $scripts = [];
 
     /**
@@ -71,7 +74,7 @@ class Dusk extends Command
             $action = $this->anticipate('Function', $actions);
 
             // quit
-            if ('quit' === strtolower($action) || 'exit' === strtolower($action) || 'bye' === strtolower($action)) {
+            if (strtolower($action) === 'quit' || strtolower($action) === 'exit' || strtolower($action) === 'bye') {
                 isset($this->browser) && $this->browser->quit();
                 exit;
             }
@@ -80,6 +83,7 @@ class Dusk extends Command
             if (file_exists(str_replace("'", '', $action))) {
                 $script = str_replace("'", '', $action);
                 $this->scripts[] = $script;
+
                 continue;
             }
 
@@ -91,8 +95,8 @@ class Dusk extends Command
             $function = $action;
 
             // Get comment
-            list($buff, $buff, $comments) = $this->getComment($script, $function);
-            if (!count($comments)) {
+            [$buff, $buff, $comments] = $this->getComment($script, $function);
+            if (! count($comments)) {
                 continue;
             }
 
@@ -111,20 +115,21 @@ class Dusk extends Command
             $commentNum = 0;
             while (count($comments) > $commentNum) {
                 // Get comment
-                list($buff, $buff, $comments) = $this->getComment($script, $function);
+                [$buff, $buff, $comments] = $this->getComment($script, $function);
                 $comment = $comments[$commentNum];
 
                 if (empty($comment['comment'])) {
                     $this->infoScript($comment['script']);
                     eval($comment['script']);
 
-                    ++$commentNum;
+                    $commentNum++;
+
                     continue;
                 }
 
                 $additionalRequest = '';
                 while (1) {
-                    list($this->indent, $request) = explode('//', $comment['comment'], 2);
+                    [$this->indent, $request] = explode('//', $comment['comment'], 2);
                     $request = trim($request);
 
                     $this->line(trim($comment['comment']));
@@ -133,7 +138,7 @@ class Dusk extends Command
                     if ($this->confirm('Generate Code ?', empty(trim($comment['script'])))) {
                         // コード生成
                         $newCode = $this->guessCode($request, $additionalRequest, $comment['script'], $commentNum, $comments);
-                        if (false === $newCode) {
+                        if ($newCode === false) {
                             $this->error('Can not generate code');
                             break;
                         }
@@ -147,7 +152,7 @@ class Dusk extends Command
                         $action = $this->anticipate('Action', ['skip', 'quit'], 'skip');
 
                         // quit
-                        if ('quit' === strtolower($action)) {
+                        if (strtolower($action) === 'quit') {
                             // 終了
                             break 2;
                         }
@@ -158,7 +163,7 @@ class Dusk extends Command
                     $action = $this->anticipate('Action', ['execute', 'update', 'skip', 'quit'], 'execute');
 
                     // execute
-                    if ('execute' === strtolower($action)) {
+                    if (strtolower($action) === 'execute') {
                         // 実行
                         $browser = $this->browser;
                         $this->errorMessage = '';
@@ -180,25 +185,26 @@ class Dusk extends Command
                             $this->newLine();
 
                             $this->errorMessage = $e->getMessage();
+
                             continue;
                         }
                     }
 
                     // update
-                    if ('update' === strtolower($action)) {
+                    if (strtolower($action) === 'update') {
                         // 実行せずに更新
                         $this->updateScript($script, $function, $commentNum, $comment);
                         break;
                     }
 
                     // skip
-                    if ('skip' === strtolower($action)) {
+                    if (strtolower($action) === 'skip') {
                         // 実行も更新もなし
                         break;
                     }
 
                     // quit
-                    if ('quit' === strtolower($action) || 'exit' === strtolower($action) || 'bye' === strtolower($action)) {
+                    if (strtolower($action) === 'quit' || strtolower($action) === 'exit' || strtolower($action) === 'bye') {
                         // 終了
                         break 2;
                     }
@@ -207,7 +213,7 @@ class Dusk extends Command
                     empty($action) || $additionalRequest = $action;
                     $comment['script'] = '';
                 }
-                ++$commentNum;
+                $commentNum++;
             }
         }
     }
@@ -252,18 +258,18 @@ class Dusk extends Command
                 $flag = true;
             }
 
-            if (!$flag && empty($functionContents)) {
+            if (! $flag && empty($functionContents)) {
                 $beforeFunction .= $line."\n";
             }
             if ($flag) {
                 $functionContents[] = $line."\n";
             }
-            if (!$flag && !empty($functionContents)) {
+            if (! $flag && ! empty($functionContents)) {
                 $afterFunction .= $line."\n";
             }
         }
 
-        while ($functionContents && false === strpos($functionContents[count($functionContents) - 1], '}')) {
+        while ($functionContents && strpos($functionContents[count($functionContents) - 1], '}') === false) {
             $afterFunction = array_pop($functionContents).$afterFunction;
         }
         $functionContent = implode('', $functionContents);
@@ -274,7 +280,7 @@ class Dusk extends Command
     private function getComment($script, $function)
     {
         $originalScript = file_get_contents($script);
-        list($beforeFunction, $functionContent, $afterFunction) = $this->splitScript($originalScript, $function);
+        [$beforeFunction, $functionContent, $afterFunction] = $this->splitScript($originalScript, $function);
 
         // Retrieve comments
         $funstionContents = explode("\n", $functionContent);
@@ -285,7 +291,7 @@ class Dusk extends Command
 
         $beforeComment = '';
         while ($funstionContents) {
-            list($scriptFlag, $comments) = $this->checkScriptContent($scriptFlag, $comments, $funstionContents[0]);
+            [$scriptFlag, $comments] = $this->checkScriptContent($scriptFlag, $comments, $funstionContents[0]);
 
             if (preg_match('/^\s*\/\/\s*/', $funstionContents[0])) {
                 break;
@@ -303,7 +309,7 @@ class Dusk extends Command
             }
 
             $afterComment = array_pop($funstionContents)."\n".$afterComment;
-            ++$num;
+            $num++;
         }
 
         foreach ($funstionContents as $funstionContent) {
@@ -312,6 +318,7 @@ class Dusk extends Command
                     'comment' => $funstionContent."\n",
                     'script' => '',
                 ];
+
                 continue;
             }
 
@@ -342,7 +349,7 @@ class Dusk extends Command
 
     private function updateScript($script, $function, $commentNum, $comment)
     {
-        list($beforeFunction, $beforeComment, $comments, $afterComment, $afterFunction) = $this->getComment($script, $function);
+        [$beforeFunction, $beforeComment, $comments, $afterComment, $afterFunction] = $this->getComment($script, $function);
         $comments[$commentNum] = $comment;
 
         $updatedScript = '';
@@ -366,14 +373,14 @@ class Dusk extends Command
         file_exists(base_path('tests/Browser/prompt')) || \Artisan::call('vendor:publish', ['--provider' => 'Blocs\DuskServiceProvider']);
 
         // Install laravel/dusk
-        if (!file_exists(base_path('tests/DuskTestCase.php'))) {
+        if (! file_exists(base_path('tests/DuskTestCase.php'))) {
             $this->error('Please execute below command to install laravel/dusk');
             $this->line('php artisan dusk:install');
             exit;
         }
 
         // Install openai-php/laravel
-        if (!file_exists(config_path('openai.php'))) {
+        if (! file_exists(config_path('openai.php'))) {
             $this->error('Please execute below command to install openai-php/laravel');
             $this->line('php artisan openai:install');
             exit;
