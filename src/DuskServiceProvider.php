@@ -9,13 +9,13 @@ class DuskServiceProvider extends ViewServiceProvider
     public function register()
     {
         $this->app->singleton('command.blocs.dusk', function ($app) {
-            return new Commands\Dusk();
+            return new Commands\Dusk;
         });
 
         $this->commands('command.blocs.dusk');
 
         $this->app->singleton('command.openai.test', function ($app) {
-            return new Commands\OpenAITest();
+            return new Commands\OpenAITest;
         });
 
         $this->commands('command.openai.test');
