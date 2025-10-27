@@ -61,7 +61,7 @@ trait OpenAITrait
             'type' => 'text',
             'text' => "# Error\n".$this->errorMessage,
         ];
-        if (0 === strpos($url, 'http://') || 0 === strpos($url, 'https:')) {
+        if (strpos($url, 'http://') === 0 || strpos($url, 'https:') === 0) {
             $this->browser->storeSource('blocsDusk');
             $htmlContent = file_get_contents(base_path('tests/Browser/source/blocsDusk.txt'));
             $htmlContent = $this->minifyHtml($htmlContent);
@@ -112,7 +112,7 @@ trait OpenAITrait
     private function minifyHtml($htmlContent)
     {
         libxml_use_internal_errors(true);
-        $dom = new \DOMDocument();
+        $dom = new \DOMDocument;
         $dom->loadHTML($htmlContent);
 
         // コメントを削除
@@ -128,7 +128,7 @@ trait OpenAITrait
         foreach ($tagsToRemove as $tagName) {
             while (true) {
                 $nodes = $dom->getElementsByTagName($tagName);
-                if (0 === $nodes->length) {
+                if ($nodes->length === 0) {
                     break;
                 }
                 $node = $nodes->item(0);
@@ -147,9 +147,9 @@ trait OpenAITrait
             $rel = $link->getAttribute('rel');
             $as = $link->getAttribute('as');
             $type = $link->getAttribute('type');
-            $isStylesheetRel = 1 === preg_match('/(^|\s)stylesheet(\s|$)/i', $rel);
-            $isPreloadStyle = 1 === preg_match('/(^|\s)preload(\s|$)/i', $rel) && 0 === strcasecmp($as, 'style');
-            $isCssType = false !== stripos($type, 'css');
+            $isStylesheetRel = preg_match('/(^|\s)stylesheet(\s|$)/i', $rel) === 1;
+            $isPreloadStyle = preg_match('/(^|\s)preload(\s|$)/i', $rel) === 1 && strcasecmp($as, 'style') === 0;
+            $isCssType = stripos($type, 'css') !== false;
             if ($isStylesheetRel || $isPreloadStyle || $isCssType) {
                 $nodesToRemove[] = $link;
             }
@@ -163,7 +163,7 @@ trait OpenAITrait
         // on*属性（イベントハンドラ）を削除し、style属性・aria*も削除、javascript: URLを無効化
         $allElements = $dom->getElementsByTagName('*');
         foreach ($allElements as $element) {
-            if (!$element->hasAttributes()) {
+            if (! $element->hasAttributes()) {
                 continue;
             }
             $attributeNames = [];
@@ -173,24 +173,27 @@ trait OpenAITrait
             foreach ($attributeNames as $attributeName) {
                 $lowerName = strtolower($attributeName);
                 // style属性の削除
-                if ('style' === $lowerName) {
+                if ($lowerName === 'style') {
                     $element->removeAttribute($attributeName);
+
                     continue;
                 }
                 // aria- の属性を削除
-                if (0 === strpos($lowerName, 'aria-')) {
+                if (strpos($lowerName, 'aria-') === 0) {
                     $element->removeAttribute($attributeName);
+
                     continue;
                 }
                 // on* イベント属性の削除
-                if (0 === stripos($attributeName, 'on')) {
+                if (stripos($attributeName, 'on') === 0) {
                     $element->removeAttribute($attributeName);
+
                     continue;
                 }
                 // javascript: を無効化
-                if ('href' === $lowerName || 'src' === $lowerName || 'xlink:href' === $lowerName) {
+                if ($lowerName === 'href' || $lowerName === 'src' || $lowerName === 'xlink:href') {
                     $value = $element->getAttribute($attributeName);
-                    if (1 === preg_match('/^\s*javascript\s*:/i', $value)) {
+                    if (preg_match('/^\s*javascript\s*:/i', $value) === 1) {
                         $element->setAttribute($attributeName, '#');
                     }
                 }
